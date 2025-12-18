@@ -1,0 +1,1022 @@
+import React, { useState, useEffect } from 'react';
+import './Admin.css';
+
+// API URL - werkt zowel lokaal als op tablet
+const API_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:8000'
+  : `http://${window.location.hostname}:8000`;
+
+function Admin() {
+  const [activeTab, setActiveTab] = useState('workplaces');
+  const [workplaces, setWorkplaces] = useState([]);
+  const [selectedWorkplace, setSelectedWorkplace] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newWorkplace, setNewWorkplace] = useState({
+    name: '',
+    description: '',
+    items: ''
+  });
+
+  // Laad werkplekken bij mount
+  useEffect(() => {
+    loadWorkplaces();
+  }, []);
+
+  const loadWorkplaces = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/api/workplaces`);
+      const data = await response.json();
+      if (data.success) {
+        setWorkplaces(data.workplaces);
+      }
+    } catch (error) {
+      console.error('Error loading workplaces:', error);
+      alert('Fout bij laden werkplekken');
+    }
+    setLoading(false);
+  };
+
+  const loadWorkplaceDetails = async (workplaceId) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/api/workplaces/${workplaceId}`);
+      const data = await response.json();
+      if (data.success) {
+        setSelectedWorkplace(data);
+      }
+    } catch (error) {
+      console.error('Error loading workplace details:', error);
+      alert('Fout bij laden werkplek details');
+    }
+    setLoading(false);
+  };
+
+  const handleAddWorkplace = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const items = newWorkplace.items.split(',').map(item => item.trim()).filter(item => item);
+
+      const response = await fetch(`${API_URL}/api/workplaces`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: newWorkplace.name,
+          description: newWorkplace.description,
+          items: items
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('Werkplek succesvol aangemaakt!');
+        setShowAddModal(false);
+        setNewWorkplace({ name: '', description: '', items: '' });
+        loadWorkplaces();
+      } else {
+        alert(`Fout: ${data.detail || 'Onbekende fout'}`);
+      }
+    } catch (error) {
+      console.error('Error adding workplace:', error);
+      alert('Fout bij toevoegen werkplek');
+    }
+    setLoading(false);
+  };
+
+  const handleDeleteWorkplace = async (workplaceId) => {
+    if (!window.confirm('Weet je zeker dat je deze werkplek wilt verwijderen? Alle gerelateerde data wordt ook verwijderd!')) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/api/workplaces/${workplaceId}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('Werkplek verwijderd!');
+        setSelectedWorkplace(null);
+        loadWorkplaces();
+      } else {
+        alert(`Fout: ${data.detail || 'Onbekende fout'}`);
+      }
+    } catch (error) {
+      console.error('Error deleting workplace:', error);
+      alert('Fout bij verwijderen werkplek');
+    }
+    setLoading(false);
+  };
+
+  const handleReferencePhotoUpload = async (workplaceId, file) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(`${API_URL}/api/workplaces/${workplaceId}/reference-photo`, {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('Referentie foto geüpload!');
+        // Reload werkplek details om nieuwe foto te tonen
+        loadWorkplaceDetails(workplaceId);
+      } else {
+        alert(`Fout: ${data.detail || 'Onbekende fout'}`);
+      }
+    } catch (error) {
+      console.error('Error uploading reference photo:', error);
+      alert('Fout bij uploaden referentie foto');
+    }
+  };
+
+  return (
+    <div className="admin-container">
+      <div className="admin-header">
+        <h1>Admin Dashboard</h1>
+        <p>Beheer werkplekken, training data en modellen</p>
+      </div>
+
+      <div className="admin-tabs">
+        <button
+          className={activeTab === 'workplaces' ? 'tab active' : 'tab'}
+          onClick={() => setActiveTab('workplaces')}
+        >
+          Werkplekken
+        </button>
+        <button
+          className={activeTab === 'training' ? 'tab active' : 'tab'}
+          onClick={() => setActiveTab('training')}
+        >
+          Training Data
+        </button>
+        <button
+          className={activeTab === 'models' ? 'tab active' : 'tab'}
+          onClick={() => setActiveTab('models')}
+        >
+          Modellen
+        </button>
+      </div>
+
+      <div className="admin-content">
+        {activeTab === 'workplaces' && (
+          <WorkplacesTab
+            workplaces={workplaces}
+            selectedWorkplace={selectedWorkplace}
+            loading={loading}
+            onSelectWorkplace={loadWorkplaceDetails}
+            onAddWorkplace={() => setShowAddModal(true)}
+            onDeleteWorkplace={handleDeleteWorkplace}
+            onRefresh={loadWorkplaces}
+            onUploadReferencePhoto={handleReferencePhotoUpload}
+          />
+        )}
+
+        {activeTab === 'training' && (
+          <TrainingTab
+            workplaces={workplaces}
+            selectedWorkplace={selectedWorkplace}
+          />
+        )}
+
+        {activeTab === 'models' && (
+          <ModelsTab
+            workplaces={workplaces}
+            selectedWorkplace={selectedWorkplace}
+          />
+        )}
+      </div>
+
+      {/* Add Workplace Modal */}
+      {showAddModal && (
+        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>Nieuwe Werkplek Toevoegen</h2>
+            <form onSubmit={handleAddWorkplace}>
+              <div className="form-group">
+                <label>Naam *</label>
+                <input
+                  type="text"
+                  value={newWorkplace.name}
+                  onChange={(e) => setNewWorkplace({...newWorkplace, name: e.target.value})}
+                  placeholder="Bijv. Werkplek A - Gereedschap"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Beschrijving</label>
+                <textarea
+                  value={newWorkplace.description}
+                  onChange={(e) => setNewWorkplace({...newWorkplace, description: e.target.value})}
+                  placeholder="Optionele beschrijving van de werkplek"
+                  rows="3"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Items (komma gescheiden) *</label>
+                <input
+                  type="text"
+                  value={newWorkplace.items}
+                  onChange={(e) => setNewWorkplace({...newWorkplace, items: e.target.value})}
+                  placeholder="Bijv. hamer, schaar, sleutel"
+                  required
+                />
+                <small>Voer de items in die op deze werkplek aanwezig moeten zijn</small>
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" onClick={() => setShowAddModal(false)} className="btn-secondary">
+                  Annuleren
+                </button>
+                <button type="submit" className="btn-primary" disabled={loading}>
+                  {loading ? 'Toevoegen...' : 'Toevoegen'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function WorkplacesTab({ workplaces, selectedWorkplace, loading, onSelectWorkplace, onAddWorkplace, onDeleteWorkplace, onRefresh, onUploadReferencePhoto }) {
+  return (
+    <div className="workplaces-tab">
+      <div className="tab-header">
+        <h2>Werkplekken Beheer</h2>
+        <div className="tab-actions">
+          <button onClick={onRefresh} className="btn-secondary" disabled={loading}>
+            Ververs
+          </button>
+          <button onClick={onAddWorkplace} className="btn-primary">
+            + Nieuwe Werkplek
+          </button>
+        </div>
+      </div>
+
+      <div className="workplaces-grid">
+        <div className="workplaces-list">
+          <h3>Alle Werkplekken ({workplaces.length})</h3>
+          {loading && <p>Laden...</p>}
+          {!loading && workplaces.length === 0 && (
+            <p className="empty-state">Geen werkplekken gevonden. Voeg er een toe!</p>
+          )}
+          {!loading && workplaces.map(workplace => (
+            <div
+              key={workplace.id}
+              className={`workplace-card ${selectedWorkplace?.workplace?.id === workplace.id ? 'selected' : ''}`}
+              onClick={() => onSelectWorkplace(workplace.id)}
+            >
+              <h4>{workplace.name}</h4>
+              <p>{workplace.description || 'Geen beschrijving'}</p>
+              <div className="workplace-items">
+                {workplace.items.map((item, idx) => (
+                  <span key={idx} className="item-badge">{item}</span>
+                ))}
+              </div>
+              <div className="workplace-meta">
+                <span className={workplace.active ? 'status-active' : 'status-inactive'}>
+                  {workplace.active ? 'Actief' : 'Inactief'}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="workplace-details">
+          {!selectedWorkplace && (
+            <div className="empty-state">
+              <p>Selecteer een werkplek om details te zien</p>
+            </div>
+          )}
+
+          {selectedWorkplace && (
+            <>
+              <div className="detail-header">
+                <h3>{selectedWorkplace.workplace.name}</h3>
+                <button
+                  onClick={() => onDeleteWorkplace(selectedWorkplace.workplace.id)}
+                  className="btn-danger"
+                >
+                  Verwijderen
+                </button>
+              </div>
+
+              <div className="detail-section">
+                <h4>Informatie</h4>
+                <p><strong>Beschrijving:</strong> {selectedWorkplace.workplace.description || 'Geen'}</p>
+                <p><strong>Items:</strong> {selectedWorkplace.workplace.items.join(', ')}</p>
+                <p><strong>Status:</strong> {selectedWorkplace.workplace.active ? 'Actief' : 'Inactief'}</p>
+                <p><strong>Aangemaakt:</strong> {new Date(selectedWorkplace.workplace.created_at).toLocaleString('nl-NL')}</p>
+              </div>
+
+              <div className="detail-section">
+                <h4>Referentie Foto</h4>
+                {selectedWorkplace.workplace.reference_photo ? (
+                  <div className="reference-photo-container">
+                    <img
+                      src={`http://localhost:8000${selectedWorkplace.workplace.reference_photo}`}
+                      alt="Referentie"
+                      className="reference-photo-preview"
+                    />
+                    <button
+                      onClick={() => document.getElementById(`reference-upload-${selectedWorkplace.workplace.id}`).click()}
+                      className="btn-secondary"
+                      style={{ marginTop: '10px' }}
+                    >
+                      Wijzig Referentie Foto
+                    </button>
+                  </div>
+                ) : (
+                  <div className="no-reference-photo">
+                    <p>Geen referentie foto ingesteld</p>
+                    <button
+                      onClick={() => document.getElementById(`reference-upload-${selectedWorkplace.workplace.id}`).click()}
+                      className="btn-primary"
+                    >
+                      Upload Referentie Foto
+                    </button>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  id={`reference-upload-${selectedWorkplace.workplace.id}`}
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      onUploadReferencePhoto(selectedWorkplace.workplace.id, e.target.files[0]);
+                    }
+                  }}
+                />
+              </div>
+
+              <div className="detail-section">
+                <h4>Dataset Statistieken</h4>
+                <div className="stats-grid">
+                  <div className="stat-card">
+                    <span className="stat-value">{selectedWorkplace.dataset_stats.total_images}</span>
+                    <span className="stat-label">Totaal Images</span>
+                  </div>
+                  <div className="stat-card">
+                    <span className="stat-value">{selectedWorkplace.dataset_stats.validated_count}</span>
+                    <span className="stat-label">Gevalideerd</span>
+                  </div>
+                  <div className="stat-card">
+                    <span className="stat-value">{selectedWorkplace.dataset_stats.unvalidated_count}</span>
+                    <span className="stat-label">Niet Gevalideerd</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="detail-section">
+                <h4>Modellen ({selectedWorkplace.models.length})</h4>
+                {selectedWorkplace.models.length === 0 ? (
+                  <p>Geen modellen geüpload</p>
+                ) : (
+                  <div className="models-list">
+                    {selectedWorkplace.models.map(model => (
+                      <div key={model.id} className="model-item">
+                        <span className="model-version">{model.version}</span>
+                        <span className={`model-status status-${model.status}`}>{model.status}</span>
+                        {model.test_accuracy && <span className="model-accuracy">{model.test_accuracy}%</span>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="detail-section">
+                <h4>Dataset Exports ({selectedWorkplace.exports.length})</h4>
+                {selectedWorkplace.exports.length === 0 ? (
+                  <p>Geen exports gemaakt</p>
+                ) : (
+                  <div className="exports-list">
+                    {selectedWorkplace.exports.map(exp => (
+                      <div key={exp.id} className="export-item">
+                        <span>{new Date(exp.exported_at).toLocaleString('nl-NL')}</span>
+                        <span>{exp.image_count} images</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TrainingTab({ workplaces }) {
+  const [selectedWorkplaceId, setSelectedWorkplaceId] = useState(null);
+  const [trainingImages, setTrainingImages] = useState([]);
+  const [datasetStats, setDatasetStats] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [uploadingFiles, setUploadingFiles] = useState(false);
+  const [showLabelModal, setShowLabelModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [labelInput, setLabelInput] = useState('');
+
+  // Laad training images voor geselecteerde werkplek
+  const loadTrainingData = async (workplaceId) => {
+    setLoading(true);
+    try {
+      // Haal training images op
+      const imagesResponse = await fetch(`${API_URL}/api/workplaces/${workplaceId}/training-images`);
+      const imagesData = await imagesResponse.json();
+
+      // Haal dataset stats op
+      const statsResponse = await fetch(`${API_URL}/api/workplaces/${workplaceId}/dataset-stats`);
+      const statsData = await statsResponse.json();
+
+      if (imagesData.success && statsData.success) {
+        setTrainingImages(imagesData.images);
+        setDatasetStats(statsData.stats);
+      }
+    } catch (error) {
+      console.error('Error loading training data:', error);
+      alert('Fout bij laden training data');
+    }
+    setLoading(false);
+  };
+
+  // Handle werkplek selectie
+  const handleWorkplaceSelect = (workplaceId) => {
+    setSelectedWorkplaceId(workplaceId);
+    loadTrainingData(workplaceId);
+  };
+
+  // Handle file upload
+  const handleFileUpload = async (files) => {
+    if (!selectedWorkplaceId) {
+      alert('Selecteer eerst een werkplek');
+      return;
+    }
+
+    setUploadingFiles(true);
+
+    try {
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('label', 'unlabeled');
+
+        const response = await fetch(`${API_URL}/api/workplaces/${selectedWorkplaceId}/training-images`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await response.json();
+        if (!data.success) {
+          alert(`Fout bij uploaden ${file.name}: ${data.detail}`);
+        }
+      }
+
+      alert(`${files.length} foto('s) geüpload!`);
+      loadTrainingData(selectedWorkplaceId);
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      alert('Fout bij uploaden bestanden');
+    }
+
+    setUploadingFiles(false);
+  };
+
+  // Handle drag and drop
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    if (files.length > 0) {
+      handleFileUpload(files);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  // Open label modal
+  const openLabelModal = (image) => {
+    setSelectedImage(image);
+    setLabelInput(image.label || '');
+    setShowLabelModal(true);
+  };
+
+  // Save label
+  const saveLabel = async () => {
+    // Dit is een placeholder - we zullen een update endpoint moeten toevoegen
+    alert('Label functionaliteit komt in volgende update');
+    setShowLabelModal(false);
+  };
+
+  // Handle dataset export
+  const handleExportDataset = async () => {
+    if (!selectedWorkplaceId) {
+      alert('Selecteer eerst een werkplek');
+      return;
+    }
+
+    if (!window.confirm('Dataset exporteren voor training? Dit maakt een ZIP bestand met alle training images.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/api/workplaces/${selectedWorkplaceId}/export-dataset`, {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        // Download ZIP file
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `dataset_export_${Date.now()}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        alert('Dataset geëxporteerd! Upload naar Google Colab voor training.');
+      } else {
+        const data = await response.json();
+        alert(`Fout: ${data.detail || 'Export mislukt'}`);
+      }
+    } catch (error) {
+      console.error('Error exporting dataset:', error);
+      alert('Fout bij exporteren dataset');
+    }
+  };
+
+  return (
+    <div className="training-tab">
+      <div className="tab-header">
+        <h2>Training Data Management</h2>
+        {selectedWorkplaceId && datasetStats && datasetStats.total_images > 0 && (
+          <button onClick={handleExportDataset} className="btn-primary">
+            📦 Export Dataset (ZIP)
+          </button>
+        )}
+      </div>
+
+      {/* Werkplek Selector */}
+      <div className="workplace-selector">
+        <label>Selecteer Werkplek:</label>
+        <select
+          value={selectedWorkplaceId || ''}
+          onChange={(e) => handleWorkplaceSelect(e.target.value)}
+          className="workplace-select"
+        >
+          <option value="">-- Kies een werkplek --</option>
+          {workplaces.map(wp => (
+            <option key={wp.id} value={wp.id}>{wp.name}</option>
+          ))}
+        </select>
+      </div>
+
+      {selectedWorkplaceId && (
+        <>
+          {/* Dataset Stats */}
+          {datasetStats && (
+            <div className="dataset-stats-section">
+              <h3>Dataset Overzicht</h3>
+              <div className="stats-grid">
+                <div className="stat-card">
+                  <span className="stat-value">{datasetStats.total_images}</span>
+                  <span className="stat-label">Totaal Images</span>
+                </div>
+                <div className="stat-card">
+                  <span className="stat-value">{datasetStats.validated_count}</span>
+                  <span className="stat-label">Gelabeld</span>
+                </div>
+                <div className="stat-card">
+                  <span className="stat-value">{datasetStats.unvalidated_count}</span>
+                  <span className="stat-label">Nog Te Labelen</span>
+                </div>
+              </div>
+
+              {Object.keys(datasetStats.label_distribution).length > 0 && (
+                <div className="label-distribution">
+                  <h4>Label Verdeling:</h4>
+                  <div className="label-bars">
+                    {Object.entries(datasetStats.label_distribution).map(([label, count]) => (
+                      <div key={label} className="label-bar">
+                        <span className="label-name">{label}</span>
+                        <div className="bar-container">
+                          <div
+                            className="bar-fill"
+                            style={{width: `${(count / datasetStats.total_images) * 100}%`}}
+                          ></div>
+                        </div>
+                        <span className="label-count">{count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Upload Zone */}
+          <div
+            className="upload-zone"
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+          >
+            <div className="upload-content">
+              <p className="upload-icon">📤</p>
+              <p className="upload-text">Sleep foto's hierheen of klik om te uploaden</p>
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={(e) => handleFileUpload(Array.from(e.target.files))}
+                style={{display: 'none'}}
+                id="file-upload"
+              />
+              <label htmlFor="file-upload" className="btn-primary">
+                {uploadingFiles ? 'Uploaden...' : 'Kies Bestanden'}
+              </label>
+            </div>
+          </div>
+
+          {/* Training Images Grid */}
+          {loading && <p>Laden...</p>}
+          {!loading && trainingImages.length === 0 && (
+            <div className="empty-state">
+              <p>Geen training images gevonden. Upload foto's om te beginnen!</p>
+            </div>
+          )}
+          {!loading && trainingImages.length > 0 && (
+            <div className="training-images-section">
+              <h3>Training Images ({trainingImages.length})</h3>
+              <div className="images-grid">
+                {trainingImages.map(img => (
+                  <div key={img.id} className="training-image-card">
+                    <div className="image-preview">
+                      <img
+                        src={`${API_URL}/${img.image_path}`}
+                        alt={img.label}
+                        onError={(e) => {e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"/>'}}
+                      />
+                    </div>
+                    <div className="image-info">
+                      <span className={`label-badge ${img.validated ? 'validated' : 'unvalidated'}`}>
+                        {img.label}
+                      </span>
+                      <button
+                        className="btn-edit"
+                        onClick={() => openLabelModal(img)}
+                      >
+                        Edit Label
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Label Modal */}
+      {showLabelModal && selectedImage && (
+        <div className="modal-overlay" onClick={() => setShowLabelModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>Label Bewerken</h2>
+            <div className="form-group">
+              <label>Label:</label>
+              <input
+                type="text"
+                value={labelInput}
+                onChange={(e) => setLabelInput(e.target.value)}
+                placeholder="Bijv. ok, nok_hamer_weg"
+              />
+              <small>Gebruik lowercase met underscores: ok, nok_hamer_weg, nok_schaar_weg</small>
+            </div>
+            <div className="modal-actions">
+              <button onClick={() => setShowLabelModal(false)} className="btn-secondary">
+                Annuleren
+              </button>
+              <button onClick={saveLabel} className="btn-primary">
+                Opslaan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ModelsTab({ workplaces }) {
+  const [selectedWorkplaceId, setSelectedWorkplaceId] = useState(null);
+  const [models, setModels] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadData, setUploadData] = useState({
+    file: null,
+    version: '',
+    test_accuracy: '',
+    notes: ''
+  });
+  const [uploading, setUploading] = useState(false);
+
+  // Laad modellen voor werkplek
+  const loadModels = async (workplaceId) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/api/workplaces/${workplaceId}/models`);
+      const data = await response.json();
+
+      if (data.success) {
+        setModels(data.models);
+      }
+    } catch (error) {
+      console.error('Error loading models:', error);
+      alert('Fout bij laden modellen');
+    }
+    setLoading(false);
+  };
+
+  // Handle werkplek selectie
+  const handleWorkplaceSelect = (workplaceId) => {
+    setSelectedWorkplaceId(workplaceId);
+    loadModels(workplaceId);
+  };
+
+  // Handle file selection
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file && file.name.endsWith('.pt')) {
+      setUploadData({...uploadData, file: file});
+    } else {
+      alert('Alleen .pt bestanden zijn toegestaan');
+      e.target.value = '';
+    }
+  };
+
+  // Handle model upload
+  const handleModelUpload = async (e) => {
+    e.preventDefault();
+
+    if (!uploadData.file) {
+      alert('Selecteer een model bestand (.pt)');
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', uploadData.file);
+      if (uploadData.version) formData.append('version', uploadData.version);
+      if (uploadData.test_accuracy) formData.append('test_accuracy', uploadData.test_accuracy);
+      if (uploadData.notes) formData.append('notes', uploadData.notes);
+
+      const response = await fetch(`${API_URL}/api/workplaces/${selectedWorkplaceId}/models`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert(`Model ${data.version} succesvol geüpload!`);
+        setShowUploadModal(false);
+        setUploadData({ file: null, version: '', test_accuracy: '', notes: '' });
+        loadModels(selectedWorkplaceId);
+      } else {
+        alert(`Fout: ${data.detail || 'Upload mislukt'}`);
+      }
+    } catch (error) {
+      console.error('Error uploading model:', error);
+      alert('Fout bij uploaden model');
+    }
+
+    setUploading(false);
+  };
+
+  // Handle model activation
+  const handleActivateModel = async (modelId) => {
+    if (!window.confirm('Dit model activeren? Het huidige actieve model wordt gearchiveerd.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/api/models/${modelId}/activate`, {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('Model geactiveerd!');
+        loadModels(selectedWorkplaceId);
+      } else {
+        alert(`Fout: ${data.detail || 'Activatie mislukt'}`);
+      }
+    } catch (error) {
+      console.error('Error activating model:', error);
+      alert('Fout bij activeren model');
+    }
+  };
+
+  return (
+    <div className="models-tab">
+      <div className="tab-header">
+        <h2>Model Management</h2>
+        {selectedWorkplaceId && (
+          <button onClick={() => setShowUploadModal(true)} className="btn-primary">
+            ⬆️ Upload Model
+          </button>
+        )}
+      </div>
+
+      {/* Werkplek Selector */}
+      <div className="workplace-selector">
+        <label>Selecteer Werkplek:</label>
+        <select
+          value={selectedWorkplaceId || ''}
+          onChange={(e) => handleWorkplaceSelect(e.target.value)}
+          className="workplace-select"
+        >
+          <option value="">-- Kies een werkplek --</option>
+          {workplaces.map(wp => (
+            <option key={wp.id} value={wp.id}>{wp.name}</option>
+          ))}
+        </select>
+      </div>
+
+      {selectedWorkplaceId && (
+        <>
+          {loading && <p>Laden...</p>}
+
+          {!loading && models.length === 0 && (
+            <div className="empty-state">
+              <p>Geen modellen gevonden. Upload een getraind model om te beginnen!</p>
+            </div>
+          )}
+
+          {!loading && models.length > 0 && (
+            <div className="models-list-section">
+              <h3>Modellen ({models.length})</h3>
+              <div className="models-table">
+                <div className="table-header">
+                  <span>Versie</span>
+                  <span>Status</span>
+                  <span>Accuracy</span>
+                  <span>Upload Datum</span>
+                  <span>Acties</span>
+                </div>
+                {models.map(model => (
+                  <div key={model.id} className={`table-row ${model.status === 'active' ? 'active-row' : ''}`}>
+                    <span className="model-version-cell">
+                      {model.version}
+                      {model.status === 'active' && <span className="active-badge">ACTIEF</span>}
+                    </span>
+                    <span>
+                      <span className={`status-badge status-${model.status}`}>
+                        {model.status}
+                      </span>
+                    </span>
+                    <span className="accuracy-cell">
+                      {model.test_accuracy ? `${model.test_accuracy}%` : '-'}
+                    </span>
+                    <span className="date-cell">
+                      {new Date(model.uploaded_at).toLocaleString('nl-NL')}
+                    </span>
+                    <span className="actions-cell">
+                      {model.status !== 'active' && (
+                        <button
+                          onClick={() => handleActivateModel(model.id)}
+                          className="btn-activate"
+                        >
+                          Activeer
+                        </button>
+                      )}
+                      {model.status === 'active' && (
+                        <span className="current-label">In gebruik</span>
+                      )}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Model Details */}
+              <div className="model-info-section">
+                <h4>ℹ️ Model Informatie</h4>
+                <div className="info-grid">
+                  <div className="info-item">
+                    <strong>Actief Model:</strong>
+                    <span>{models.find(m => m.status === 'active')?.version || 'Geen'}</span>
+                  </div>
+                  <div className="info-item">
+                    <strong>Totaal Modellen:</strong>
+                    <span>{models.length}</span>
+                  </div>
+                  <div className="info-item">
+                    <strong>Gearchiveerd:</strong>
+                    <span>{models.filter(m => m.status === 'archived').length}</span>
+                  </div>
+                  <div className="info-item">
+                    <strong>Beste Accuracy:</strong>
+                    <span>
+                      {Math.max(...models.filter(m => m.test_accuracy).map(m => m.test_accuracy)) || '-'}
+                      {models.some(m => m.test_accuracy) && '%'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Upload Modal */}
+      {showUploadModal && (
+        <div className="modal-overlay" onClick={() => setShowUploadModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>Model Uploaden</h2>
+            <form onSubmit={handleModelUpload}>
+              <div className="form-group">
+                <label>Model Bestand (.pt) *</label>
+                <input
+                  type="file"
+                  accept=".pt"
+                  onChange={handleFileSelect}
+                  required
+                />
+                {uploadData.file && (
+                  <small className="file-selected">✓ {uploadData.file.name}</small>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label>Versie</label>
+                <input
+                  type="text"
+                  value={uploadData.version}
+                  onChange={(e) => setUploadData({...uploadData, version: e.target.value})}
+                  placeholder="Bijv. v1.0, v1.1 (optioneel, wordt auto-gegenereerd)"
+                />
+                <small>Laat leeg voor automatische versie nummering</small>
+              </div>
+
+              <div className="form-group">
+                <label>Test Accuracy (%)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="100"
+                  value={uploadData.test_accuracy}
+                  onChange={(e) => setUploadData({...uploadData, test_accuracy: e.target.value})}
+                  placeholder="Bijv. 95.5"
+                />
+                <small>Accuracy van validation set uit training</small>
+              </div>
+
+              <div className="form-group">
+                <label>Notities</label>
+                <textarea
+                  value={uploadData.notes}
+                  onChange={(e) => setUploadData({...uploadData, notes: e.target.value})}
+                  placeholder="Training details, dataset size, epochs, etc."
+                  rows="4"
+                />
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" onClick={() => setShowUploadModal(false)} className="btn-secondary">
+                  Annuleren
+                </button>
+                <button type="submit" className="btn-primary" disabled={uploading}>
+                  {uploading ? 'Uploaden...' : 'Upload Model'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default Admin;

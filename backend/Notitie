@@ -1,0 +1,48 @@
+*
+
+
+Hier worden alle bevindingen bschreven tijdens het ontwikkelen van de applicatie
+
+*PNG kan verschil uitmaken wanneer men heel diep gaat in de analyse
+*JPG is voor onze toepassing afdoenden 
+
+We hebben een classificatie Goed/Fout en een object detectie in het model
+Classificatie zouden we ook met OpenCV kunnen doen 
+Object detectie zouden we met YOLO kunnen doen
+
+anomaly is de wanneer er iets niet goed is in de foto
+
+roboflow is een platform voor het trainen van object detectie/computer vision
+
+Bij het trainen kun je verschillende parameters ingeven, zoals:
+* learning rate
+* batch size
+* epochs
+* optimizer
+* loss function
+* metrics
+* 
+
+epochs is het aantal keer dat de training data door het model wordt doorlopen 
+batch size is het aantal keer dat de training data door het model wordt doorlopen per epoch 
+
+model blijft trainen totdat hij niet meer verbeterd. 
+
+Parameters die belangrijk zijn die je fotos en daardoor de beoordeling van je voorspelling kunnen beinvloeden 
+Licht en donker 
+hoek van de foto 
+dat kan verticaal als horizontaal zijn
+in de data set  moeten fotos zijn waarbij het object ook er een keer niet is 
+
+ML flow is een soort aplicatie die je proces een beetje managed 
+
+Usecases voor ons zouden kunnen zijn:
+* ht controleren van een ehbo kist
+* van een werkplek
+* van een doorgang
+* schaduwbord
+
+Waarom moet je het model nog trainen, is dat voor de laatste fase? 
+
+
+

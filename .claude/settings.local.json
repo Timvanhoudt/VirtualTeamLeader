@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(if exist backend dir /b backend)",
+      "Bash(if exist frontend dir /b frontend)",
+      "Bash(cat:*)",
+      "Bash(ls:*)",
+      "Bash(python main.py:*)",
+      "Bash(npm start)",
+      "Bash(timeout /t 5)",
+      "Bash(python:*)",
+      "Bash(test -f:*)",
+      "Bash(taskkill:*)",
+      "Bash(curl:*)",
+      "Bash(timeout /t 10)",
+      "Bash(set PORT=3001)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)"
+    ]
+  }
+}

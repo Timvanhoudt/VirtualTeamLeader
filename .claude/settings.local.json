@@ -16,7 +16,9 @@
       "Bash(timeout /t 10)",
       "Bash(set PORT=3001)",
       "Bash(netstat:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(if exist \"c:\\\\Users\\\\Admin\\\\VisualCode\\\\Projects\\\\School\\\\VirtualTeamLeader\\\\RefresCO_v2_MLOps\\\\backend\\\\data\" dir /b \"c:\\\\Users\\\\Admin\\\\VisualCode\\\\Projects\\\\School\\\\VirtualTeamLeader\\\\RefresCO_v2_MLOps\\\\backend\\\\data\")",
+      "Bash(powershell -ExecutionPolicy Bypass -File clear_all_data.ps1)"
     ]
   }
 }

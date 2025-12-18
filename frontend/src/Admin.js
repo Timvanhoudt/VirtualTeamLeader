@@ -1257,7 +1257,7 @@ function NewWorkplaceTrainingSection({ workplace }) {
   const [uploadingFiles, setUploadingFiles] = useState(false);
   const [showBatchLabelModal, setShowBatchLabelModal] = useState(false);
   const [pendingPhotos, setPendingPhotos] = useState([]);
-  const [batchLabel, setBatchLabel] = useState('');
+  const [missingItems, setMissingItems] = useState([]);
   const [readyForTraining, setReadyForTraining] = useState(false);
   const [labelFilter, setLabelFilter] = useState('all');
   const [editingImage, setEditingImage] = useState(null);
@@ -1306,16 +1306,44 @@ function NewWorkplaceTrainingSection({ workplace }) {
       }
     });
 
-    // Check if all items have at least 30 photos
-    const requiredItems = ['OK', ...workplace.items.map(item => `NOK-${item}`)];
-    const allReady = requiredItems.every(item => (labelCounts[item] || 0) >= 30);
+    // Define required scenarios for optimal YOLO training
+    const scenarios = [
+      { label: 'OK', description: 'Alle items aanwezig', target: 100, isComplete: false },
+      ...workplace.items.map(item => ({
+        label: `NOK-${item}`,
+        description: `Alleen ${item} ontbreekt`,
+        target: 50,
+        isComplete: false
+      })),
+      { label: 'Leeg', description: 'Alle items ontbreken', target: 30, isComplete: false }
+    ];
+
+    // Calculate completion for each scenario
+    scenarios.forEach(scenario => {
+      const count = labelCounts[scenario.label] || 0;
+      scenario.count = count;
+      scenario.isComplete = count >= scenario.target;
+      scenario.progress = Math.min((count / scenario.target) * 100, 100);
+    });
+
+    // Check if all scenarios are complete
+    const allReady = scenarios.every(s => s.isComplete);
     setReadyForTraining(allReady);
+
+    // Find next recommended scenario to photograph
+    const incomplete = scenarios.filter(s => !s.isComplete);
+    const nextScenario = incomplete.length > 0
+      ? incomplete.sort((a, b) => a.count - b.count)[0]
+      : null;
 
     setDatasetStats({
       total: images.length,
       labeled: images.filter(img => img.label && img.label !== 'unlabeled').length,
       unlabeled: images.filter(img => !img.label || img.label === 'unlabeled').length,
-      labelCounts: labelCounts
+      labelCounts: labelCounts,
+      scenarios: scenarios,
+      nextScenario: nextScenario,
+      completionPercentage: Math.round((scenarios.filter(s => s.isComplete).length / scenarios.length) * 100)
     });
   };
 
@@ -1338,16 +1366,22 @@ function NewWorkplaceTrainingSection({ workplace }) {
 
   // Save batch with label
   const saveBatchWithLabel = async () => {
-    if (!batchLabel.trim()) {
-      alert('Vul een label in');
-      return;
+    // Generate label from missing items
+    let label;
+    if (missingItems.length === 0) {
+      label = 'OK';
+    } else if (missingItems.length === workplace.items.length) {
+      label = 'Leeg';
+    } else {
+      label = `NOK-${missingItems.join('-')}`;
     }
 
     setUploadingFiles(true);
     setUploadProgress({ current: 0, total: pendingPhotos.length });
 
     try {
-      console.log(`Starting upload of ${pendingPhotos.length} photos with label: ${batchLabel}`);
+      console.log(`Starting upload of ${pendingPhotos.length} photos with label: ${label}`);
+      console.log(`Missing items: ${missingItems.join(', ') || 'none'}`);
       let successCount = 0;
       let errorCount = 0;
 
@@ -1360,7 +1394,7 @@ function NewWorkplaceTrainingSection({ workplace }) {
           const blob = await (await fetch(photo.data)).blob();
           const formData = new FormData();
           formData.append('file', blob, photo.name);
-          formData.append('label', batchLabel);
+          formData.append('label', label);
 
           const response = await axios.post(
             `${API_URL}/api/workplaces/${workplace.id}/training-images`,
@@ -1382,12 +1416,12 @@ function NewWorkplaceTrainingSection({ workplace }) {
       if (errorCount > 0) {
         alert(`${successCount} foto's opgeslagen, ${errorCount} mislukt. Check console voor details.`);
       } else {
-        alert(`${successCount} foto's succesvol opgeslagen met label: ${batchLabel}`);
+        alert(`${successCount} foto's succesvol opgeslagen met label: ${label}`);
       }
 
       setShowBatchLabelModal(false);
       setPendingPhotos([]);
-      setBatchLabel('');
+      setMissingItems([]);
       loadTrainingData();
     } catch (error) {
       console.error('Error saving batch:', error);
@@ -1493,31 +1527,61 @@ function NewWorkplaceTrainingSection({ workplace }) {
             </div>
           </div>
 
-          {/* Label requirements */}
-          <div className="label-requirements">
-            <h5>Vereiste Labels (minimaal 30 per label):</h5>
-            <div className="requirements-grid">
-              <div className={`requirement-item ${(datasetStats.labelCounts['OK'] || 0) >= 30 ? 'complete' : 'incomplete'}`}>
-                <span className="label-name">OK</span>
-                <span className="label-count">{datasetStats.labelCounts['OK'] || 0} / 30</span>
-                <span className="status-icon">{(datasetStats.labelCounts['OK'] || 0) >= 30 ? '✓' : '○'}</span>
+          {/* Guided Collection Dashboard */}
+          <div className="guided-collection">
+            <div className="collection-header">
+              <h5>📋 Dataset Verzamelplan</h5>
+              <div className="overall-progress">
+                <span className="progress-label">{datasetStats.completionPercentage}% Compleet</span>
+                <div className="mini-progress-bar">
+                  <div
+                    className="mini-progress-fill"
+                    style={{ width: `${datasetStats.completionPercentage}%` }}
+                  />
+                </div>
               </div>
-              {workplace.items.map(item => {
-                const label = `NOK-${item}`;
-                const count = datasetStats.labelCounts[label] || 0;
-                return (
-                  <div key={label} className={`requirement-item ${count >= 30 ? 'complete' : 'incomplete'}`}>
-                    <span className="label-name">{label}</span>
-                    <span className="label-count">{count} / 30</span>
-                    <span className="status-icon">{count >= 30 ? '✓' : '○'}</span>
+            </div>
+
+            {datasetStats.nextScenario && (
+              <div className="next-scenario-banner">
+                <span className="next-icon">📸</span>
+                <div className="next-info">
+                  <strong>Volgende aanbeveling:</strong>
+                  <p>Fotografeer werkplek: {datasetStats.nextScenario.description}</p>
+                  <small>Nog {datasetStats.nextScenario.target - datasetStats.nextScenario.count} foto's nodig</small>
+                </div>
+              </div>
+            )}
+
+            <div className="scenarios-list">
+              {datasetStats.scenarios.map(scenario => (
+                <div key={scenario.label} className={`scenario-item ${scenario.isComplete ? 'complete' : 'incomplete'}`}>
+                  <div className="scenario-header">
+                    <span className="scenario-icon">{scenario.isComplete ? '✓' : '○'}</span>
+                    <div className="scenario-info">
+                      <strong>{scenario.label}</strong>
+                      <small>{scenario.description}</small>
+                    </div>
+                    <span className="scenario-count">
+                      {scenario.count} / {scenario.target}
+                    </span>
                   </div>
-                );
-              })}
+                  <div className="scenario-progress-bar">
+                    <div
+                      className="scenario-progress-fill"
+                      style={{
+                        width: `${scenario.progress}%`,
+                        backgroundColor: scenario.isComplete ? '#28a745' : '#667eea'
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
 
             {readyForTraining && (
               <div className="ready-banner">
-                <p>✅ Dataset is klaar voor training! Je kunt nu exporteren.</p>
+                <p>✅ Dataset is compleet en klaar voor training!</p>
                 <button onClick={handleExportDataset} className="btn-success">
                   📦 Export Dataset voor Training
                 </button>
@@ -1642,19 +1706,31 @@ function NewWorkplaceTrainingSection({ workplace }) {
             </div>
 
             <div className="form-group">
-              <label>Selecteer Label:</label>
-              <select
-                value={batchLabel}
-                onChange={(e) => setBatchLabel(e.target.value)}
-                className="label-select"
-              >
-                <option value="">-- Kies een label --</option>
-                <option value="OK">OK - Alle items aanwezig</option>
+              <label>Welke items ontbreken op deze foto's?</label>
+              <div className="checkbox-group">
                 {workplace.items.map(item => (
-                  <option key={item} value={`NOK-${item}`}>NOK - {item} ontbreekt</option>
+                  <label key={item} className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={missingItems.includes(item)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setMissingItems([...missingItems, item]);
+                        } else {
+                          setMissingItems(missingItems.filter(i => i !== item));
+                        }
+                      }}
+                    />
+                    <span>{item}</span>
+                  </label>
                 ))}
-              </select>
-              <small>Labels zijn gebaseerd op de items van deze werkplek</small>
+              </div>
+              <small>
+                {missingItems.length === 0 && '✓ Alle items aanwezig (OK)'}
+                {missingItems.length === workplace.items.length && '⚠ Alle items ontbreken (Leeg)'}
+                {missingItems.length > 0 && missingItems.length < workplace.items.length &&
+                  `⚠ ${missingItems.join(', ')} ontbreekt`}
+              </small>
             </div>
 
             {uploadingFiles && (
@@ -1672,10 +1748,10 @@ function NewWorkplaceTrainingSection({ workplace }) {
             )}
 
             <div className="modal-actions">
-              <button onClick={() => setShowBatchLabelModal(false)} className="btn-secondary" disabled={uploadingFiles}>
+              <button onClick={() => { setShowBatchLabelModal(false); setMissingItems([]); }} className="btn-secondary" disabled={uploadingFiles}>
                 Annuleren
               </button>
-              <button onClick={saveBatchWithLabel} disabled={uploadingFiles || !batchLabel} className="btn-primary">
+              <button onClick={saveBatchWithLabel} disabled={uploadingFiles} className="btn-primary">
                 {uploadingFiles ? `Uploading ${uploadProgress.current}/${uploadProgress.total}...` : `${pendingPhotos.length} Foto's Opslaan`}
               </button>
             </div>

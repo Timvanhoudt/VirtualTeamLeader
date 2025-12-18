@@ -785,6 +785,75 @@ def get_training_images(workplace_id, validated_only=False):
     return images
 
 
+def update_training_image_label(image_id, new_label):
+    """
+    Update label van een training image
+
+    Args:
+        image_id: ID van training image
+        new_label: Nieuwe label
+
+    Returns:
+        True als succesvol, False anders
+    """
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("""
+            UPDATE training_images
+            SET label = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        """, (new_label, image_id))
+
+        conn.commit()
+        success = cursor.rowcount > 0
+        conn.close()
+        return success
+    except Exception as e:
+        conn.close()
+        print(f"Error updating training image label: {e}")
+        return False
+
+
+def delete_training_image(image_id):
+    """
+    Verwijder een training image
+
+    Args:
+        image_id: ID van training image
+
+    Returns:
+        Tuple (success: bool, image_path: str) - path voor file cleanup
+    """
+    conn = sqlite3.connect(DATABASE_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    try:
+        # Haal eerst het image path op voor cleanup
+        cursor.execute("SELECT image_path FROM training_images WHERE id = ?", (image_id,))
+        row = cursor.fetchone()
+
+        if not row:
+            conn.close()
+            return False, None
+
+        image_path = row['image_path']
+
+        # Verwijder uit database
+        cursor.execute("DELETE FROM training_images WHERE id = ?", (image_id,))
+        conn.commit()
+
+        success = cursor.rowcount > 0
+        conn.close()
+        return success, image_path
+    except Exception as e:
+        conn.close()
+        print(f"Error deleting training image: {e}")
+        return False, None
+
+
 def get_training_dataset_stats(workplace_id):
     """
     Haal dataset statistieken op voor werkplek

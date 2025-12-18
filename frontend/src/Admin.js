@@ -1252,12 +1252,17 @@ function ProductionReviewSection({ workplace }) {
 // ==========================================
 function NewWorkplaceTrainingSection({ workplace }) {
   const [trainingImages, setTrainingImages] = useState([]);
+  const [filteredImages, setFilteredImages] = useState([]);
   const [datasetStats, setDatasetStats] = useState(null);
   const [uploadingFiles, setUploadingFiles] = useState(false);
   const [showBatchLabelModal, setShowBatchLabelModal] = useState(false);
   const [pendingPhotos, setPendingPhotos] = useState([]);
   const [batchLabel, setBatchLabel] = useState('');
   const [readyForTraining, setReadyForTraining] = useState(false);
+  const [labelFilter, setLabelFilter] = useState('all');
+  const [editingImage, setEditingImage] = useState(null);
+  const [newLabel, setNewLabel] = useState('');
+  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
 
   // Load training data
   useEffect(() => {
@@ -1266,6 +1271,17 @@ function NewWorkplaceTrainingSection({ workplace }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workplace]);
+
+  // Filter training images based on label filter
+  useEffect(() => {
+    if (labelFilter === 'all') {
+      setFilteredImages(trainingImages);
+    } else if (labelFilter === 'unlabeled') {
+      setFilteredImages(trainingImages.filter(img => !img.label || img.label === 'unlabeled'));
+    } else {
+      setFilteredImages(trainingImages.filter(img => img.label === labelFilter));
+    }
+  }, [trainingImages, labelFilter]);
 
   const loadTrainingData = async () => {
     try {
@@ -1328,30 +1344,101 @@ function NewWorkplaceTrainingSection({ workplace }) {
     }
 
     setUploadingFiles(true);
+    setUploadProgress({ current: 0, total: pendingPhotos.length });
 
     try {
-      for (const photo of pendingPhotos) {
-        const blob = await (await fetch(photo.data)).blob();
-        const formData = new FormData();
-        formData.append('file', blob, photo.name);
-        formData.append('label', batchLabel);
+      console.log(`Starting upload of ${pendingPhotos.length} photos with label: ${batchLabel}`);
+      let successCount = 0;
+      let errorCount = 0;
 
-        await axios.post(`${API_URL}/api/workplaces/${workplace.id}/training-images`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+      for (let i = 0; i < pendingPhotos.length; i++) {
+        const photo = pendingPhotos[i];
+        try {
+          console.log(`Uploading photo ${i + 1}/${pendingPhotos.length}: ${photo.name}`);
+          setUploadProgress({ current: i + 1, total: pendingPhotos.length });
+
+          const blob = await (await fetch(photo.data)).blob();
+          const formData = new FormData();
+          formData.append('file', blob, photo.name);
+          formData.append('label', batchLabel);
+
+          const response = await axios.post(
+            `${API_URL}/api/workplaces/${workplace.id}/training-images`,
+            formData,
+            {
+              headers: { 'Content-Type': 'multipart/form-data' }
+            }
+          );
+
+          console.log(`Photo ${i + 1} uploaded successfully:`, response.data);
+          successCount++;
+        } catch (photoError) {
+          console.error(`Error uploading photo ${i + 1}:`, photoError);
+          console.error('Error details:', photoError.response?.data || photoError.message);
+          errorCount++;
+        }
       }
 
-      alert(`${pendingPhotos.length} foto's opgeslagen met label: ${batchLabel}`);
+      if (errorCount > 0) {
+        alert(`${successCount} foto's opgeslagen, ${errorCount} mislukt. Check console voor details.`);
+      } else {
+        alert(`${successCount} foto's succesvol opgeslagen met label: ${batchLabel}`);
+      }
+
       setShowBatchLabelModal(false);
       setPendingPhotos([]);
       setBatchLabel('');
       loadTrainingData();
     } catch (error) {
       console.error('Error saving batch:', error);
-      alert('Fout bij opslaan foto\'s');
+      alert('Fout bij opslaan foto\'s. Check console voor details.');
     }
 
     setUploadingFiles(false);
+  };
+
+  // Handle edit label
+  const handleEditLabel = (image) => {
+    setEditingImage(image);
+    setNewLabel(image.label || '');
+  };
+
+  const saveEditedLabel = async () => {
+    if (!newLabel.trim()) {
+      alert('Vul een label in');
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('label', newLabel);
+
+      await axios.put(`${API_URL}/api/workplaces/${workplace.id}/training-images/${editingImage.id}`, formData);
+
+      alert('Label succesvol bijgewerkt!');
+      setEditingImage(null);
+      setNewLabel('');
+      loadTrainingData();
+    } catch (error) {
+      console.error('Error updating label:', error);
+      alert('Fout bij bijwerken label');
+    }
+  };
+
+  // Handle delete image
+  const handleDeleteImage = async (imageId) => {
+    if (!window.confirm('Weet je zeker dat je deze foto wilt verwijderen?')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API_URL}/api/workplaces/${workplace.id}/training-images/${imageId}`);
+      alert('Foto succesvol verwijderd!');
+      loadTrainingData();
+    } catch (error) {
+      console.error('Error deleting image:', error);
+      alert('Fout bij verwijderen foto');
+    }
   };
 
   // Export dataset
@@ -1436,6 +1523,18 @@ function NewWorkplaceTrainingSection({ workplace }) {
                 </button>
               </div>
             )}
+
+            {/* Export button altijd beschikbaar */}
+            {!readyForTraining && datasetStats.labeled > 0 && (
+              <div className="export-section">
+                <p className="export-info">
+                  💡 Je kunt ook exporteren met minder dan 30 foto's per label voor testdoeleinden.
+                </p>
+                <button onClick={handleExportDataset} className="btn-secondary">
+                  📦 Export Huidige Dataset ({datasetStats.labeled} foto's)
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -1462,9 +1561,39 @@ function NewWorkplaceTrainingSection({ workplace }) {
       {/* Training Images Grid */}
       {trainingImages.length > 0 && (
         <div className="training-images-grid">
-          <h4>Training Images ({trainingImages.length})</h4>
+          <div className="training-images-header">
+            <h4>Training Images ({filteredImages.length} van {trainingImages.length})</h4>
+
+            {/* Filter Dropdown */}
+            <div className="filter-controls">
+              <label>Filter op label:</label>
+              <select
+                value={labelFilter}
+                onChange={(e) => setLabelFilter(e.target.value)}
+                className="label-filter-select"
+              >
+                <option value="all">Alle ({trainingImages.length})</option>
+                <option value="unlabeled">
+                  Unlabeled ({trainingImages.filter(img => !img.label || img.label === 'unlabeled').length})
+                </option>
+                <option value="OK">
+                  OK ({trainingImages.filter(img => img.label === 'OK').length})
+                </option>
+                {workplace.items.map(item => {
+                  const label = `NOK-${item}`;
+                  const count = trainingImages.filter(img => img.label === label).length;
+                  return (
+                    <option key={label} value={label}>
+                      {label} ({count})
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          </div>
+
           <div className="images-grid">
-            {trainingImages.map(img => (
+            {filteredImages.map(img => (
               <div key={img.id} className="training-image-card">
                 <img
                   src={`${API_URL}/${img.image_path}`}
@@ -1474,6 +1603,22 @@ function NewWorkplaceTrainingSection({ workplace }) {
                   <span className={`label-badge ${img.label && img.label !== 'unlabeled' ? 'labeled' : 'unlabeled'}`}>
                     {img.label || 'Unlabeled'}
                   </span>
+                </div>
+                <div className="image-actions">
+                  <button
+                    onClick={() => handleEditLabel(img)}
+                    className="btn-edit"
+                    title="Label bewerken"
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    onClick={() => handleDeleteImage(img.id)}
+                    className="btn-delete"
+                    title="Foto verwijderen"
+                  >
+                    🗑️
+                  </button>
                 </div>
               </div>
             ))}
@@ -1512,12 +1657,71 @@ function NewWorkplaceTrainingSection({ workplace }) {
               <small>Labels zijn gebaseerd op de items van deze werkplek</small>
             </div>
 
+            {uploadingFiles && (
+              <div className="upload-progress">
+                <div className="progress-bar">
+                  <div
+                    className="progress-fill"
+                    style={{ width: `${(uploadProgress.current / uploadProgress.total) * 100}%` }}
+                  />
+                </div>
+                <p className="progress-text">
+                  Uploading {uploadProgress.current} van {uploadProgress.total} foto's...
+                </p>
+              </div>
+            )}
+
             <div className="modal-actions">
-              <button onClick={() => setShowBatchLabelModal(false)} className="btn-secondary">
+              <button onClick={() => setShowBatchLabelModal(false)} className="btn-secondary" disabled={uploadingFiles}>
                 Annuleren
               </button>
               <button onClick={saveBatchWithLabel} disabled={uploadingFiles || !batchLabel} className="btn-primary">
-                {uploadingFiles ? 'Opslaan...' : `${pendingPhotos.length} Foto's Opslaan`}
+                {uploadingFiles ? `Uploading ${uploadProgress.current}/${uploadProgress.total}...` : `${pendingPhotos.length} Foto's Opslaan`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Label Modal */}
+      {editingImage && (
+        <div className="modal-overlay" onClick={() => setEditingImage(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>Label Bewerken</h2>
+
+            <div className="edit-image-preview">
+              <img
+                src={`${API_URL}/${editingImage.image_path}`}
+                alt={editingImage.label}
+                style={{ maxWidth: '100%', maxHeight: '300px', objectFit: 'contain' }}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Huidig Label: <strong>{editingImage.label || 'Unlabeled'}</strong></label>
+            </div>
+
+            <div className="form-group">
+              <label>Nieuw Label:</label>
+              <select
+                value={newLabel}
+                onChange={(e) => setNewLabel(e.target.value)}
+                className="label-select"
+              >
+                <option value="">-- Kies een label --</option>
+                <option value="OK">OK - Alle items aanwezig</option>
+                {workplace.items.map(item => (
+                  <option key={item} value={`NOK-${item}`}>NOK - {item} ontbreekt</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="modal-actions">
+              <button onClick={() => setEditingImage(null)} className="btn-secondary">
+                Annuleren
+              </button>
+              <button onClick={saveEditedLabel} disabled={!newLabel} className="btn-primary">
+                Opslaan
               </button>
             </div>
           </div>

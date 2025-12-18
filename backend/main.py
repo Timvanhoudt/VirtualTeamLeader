@@ -16,6 +16,7 @@ from datetime import datetime
 import io
 from PIL import Image
 import base64
+import json
 
 from utils.face_blur import FaceBlurrer
 from database import init_database, save_analysis
@@ -1137,6 +1138,87 @@ async def get_training_images_endpoint(workplace_id: int, validated_only: bool =
             "success": True,
             "images": images,
             "count": len(images)
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+
+@app.put("/api/workplaces/{workplace_id}/training-images/{image_id}")
+async def update_training_image_endpoint(
+    workplace_id: int,
+    image_id: int,
+    label: str = Form(...)
+):
+    """
+    Update label van een training image
+
+    Args:
+        workplace_id: ID van werkplek
+        image_id: ID van training image
+        label: Nieuwe label
+
+    Returns:
+        Success message
+    """
+    from database import update_training_image_label, get_workplace
+
+    try:
+        # Check of werkplek bestaat
+        if not get_workplace(workplace_id):
+            raise HTTPException(status_code=404, detail="Werkplek niet gevonden")
+
+        success = update_training_image_label(image_id, label)
+
+        if not success:
+            raise HTTPException(status_code=404, detail="Training image niet gevonden")
+
+        return {
+            "success": True,
+            "message": "Label succesvol bijgewerkt"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+
+@app.delete("/api/workplaces/{workplace_id}/training-images/{image_id}")
+async def delete_training_image_endpoint(workplace_id: int, image_id: int):
+    """
+    Verwijder een training image
+
+    Args:
+        workplace_id: ID van werkplek
+        image_id: ID van training image
+
+    Returns:
+        Success message
+    """
+    from database import delete_training_image, get_workplace
+    import os
+
+    try:
+        # Check of werkplek bestaat
+        if not get_workplace(workplace_id):
+            raise HTTPException(status_code=404, detail="Werkplek niet gevonden")
+
+        success, image_path = delete_training_image(image_id)
+
+        if not success:
+            raise HTTPException(status_code=404, detail="Training image niet gevonden")
+
+        # Verwijder fysiek bestand als het bestaat
+        if image_path and os.path.exists(image_path):
+            try:
+                os.remove(image_path)
+            except Exception as e:
+                print(f"Warning: Could not delete file {image_path}: {e}")
+
+        return {
+            "success": True,
+            "message": "Training image succesvol verwijderd"
         }
     except HTTPException:
         raise

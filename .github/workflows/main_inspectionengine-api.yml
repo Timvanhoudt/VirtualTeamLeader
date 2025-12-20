@@ -5,10 +5,13 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  id-token: write      # nodig voor OIDC
+  contents: read       # om de code te kunnen clonen
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4

@@ -63,4 +63,4 @@ jobs:
         with:
           app-name: 'inspectionengine-api'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_943148B33F9C4CFD99BE937337B41260 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_B78240D126324CCC82D9DC7601602953 }}

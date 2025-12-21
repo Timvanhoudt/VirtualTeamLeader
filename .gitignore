@@ -26,11 +26,11 @@ env/
 ENV/
 
 # AI Models & Training
-backend/models/*.pt
-!backend/models/.gitkeep
-training/runs/
-*.weights
-*.onnx
+#backend/models/*.pt
+#!backend/models/.gitkeep
+#training/runs/
+#*.weights
+#*.onnx
 
 # Data
 #data/raw/

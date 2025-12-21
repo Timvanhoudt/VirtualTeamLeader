@@ -1,140 +1,118 @@
 """
-Dataset preparation script voor YOLO training
-Converteert de folder structuur naar YOLO format
+Dataset preparation script voor YOLOv8 Object Detection
+Converts CVAT export (images + labels) to YOLO folder structure
 """
 
-import os
 import shutil
 from pathlib import Path
 import random
-from PIL import Image
+import yaml
 
 # Configuratie
 RAW_DATA_DIR = Path("../data/raw")
 OUTPUT_DIR = Path("../data/processed/yolo_dataset")
 TRAIN_SPLIT = 0.8  # 80% training, 20% validation
 
-# Class mapping
-CLASS_MAPPING = {
-    "Afbeeldingen OK": 0,
-    "Afbeeldingen NOK alles weg": 1,
-    "Afbeeldingen NOK hamer weg": 2,
-    "Afbeeldingen NOK schaar weg": 3,
-    "Afbeeldingen NOK schaar en sleutel weg": 4,
-    "Afbeeldingen NOK sleutel weg": 5,
-    "Afbeeldingen NOK alleen sleutel": 6  # NIEUW - voor betere sleutel detectie
-}
-
+# Classes (moet matchen met je CVAT obj.names)
 CLASS_NAMES = [
-    "ok",
-    "nok_alles_weg",
-    "nok_hamer_weg",
-    "nok_schaar_weg",
-    "nok_schaar_sleutel_weg",
-    "nok_sleutel_weg",
-    "nok_alleen_sleutel"  # NIEUW
+    "schaar",
+    "sleutel",
+    "whiteboard"
 ]
 
-def create_directory_structure():
-    """Maak YOLO directory structuur voor classificatie"""
-    # Verwijder oude output als die bestaat om conflicten te voorkomen
+def setup_directories():
+    """Maak YOLO directory structuur"""
     if OUTPUT_DIR.exists():
         try:
             shutil.rmtree(OUTPUT_DIR)
         except Exception as e:
             print(f"Kon oude directory niet verwijderen: {e}")
 
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    
-    for split in ['train', 'val']:
-        # Maak class folders aan
-        for idx, name in enumerate(CLASS_NAMES):
-            # Gebruik prefix om volgorde te garanderen: 0_ok, 1_nok_alles_weg, etc.
-            folder_name = f"{idx}_{name}"
-            (OUTPUT_DIR / split / folder_name).mkdir(parents=True, exist_ok=True)
+    # Create standard YOLO structure
+    (OUTPUT_DIR / "train/images").mkdir(parents=True, exist_ok=True)
+    (OUTPUT_DIR / "train/labels").mkdir(parents=True, exist_ok=True)
+    (OUTPUT_DIR / "val/images").mkdir(parents=True, exist_ok=True)
+    (OUTPUT_DIR / "val/labels").mkdir(parents=True, exist_ok=True)
             
-    print("✓ Directory structuur aangemaakt (ImageFolder format)")
+    print("✓ Directory structuur aangemaakt (images/labels format)")
 
-def get_image_files(folder_path):
-    """Haal alle afbeeldingen op uit een folder"""
+def find_image_label_pairs(raw_dir):
+    """Zoek recursief naar paren van images en .txt labels"""
+    pairs = []
     image_extensions = {'.jpg', '.jpeg', '.png', '.bmp'}
-    files = []
-    for file in folder_path.glob('*'):
-        if file.suffix.lower() in image_extensions:
-            files.append(file)
-    return files
+    
+    # Zoek alle images
+    for img_path in raw_dir.rglob('*'):
+        if img_path.suffix.lower() in image_extensions:
+            # Zoek bijbehorende label file
+            # 1. Check zelfde folder
+            lbl_path = img_path.with_suffix('.txt')
+            
+            if not lbl_path.exists():
+                # 2. Check als er een 'labels' folder is, of 'obj_train_data' logica (CVAT)
+                # Voor nu, we zoeken gewoon recursief naar bestandsnaam
+                candidates = list(raw_dir.rglob(img_path.stem + '.txt'))
+                if candidates:
+                    lbl_path = candidates[0]
+            
+            if lbl_path.exists():
+                pairs.append((img_path, lbl_path))
+            else:
+                print(f"⚠ Warning: Geen label gevonden voor {img_path.name}")
+                
+    return pairs
 
 def process_dataset():
-    """Verwerk de dataset en split in train/val"""
-
-    create_directory_structure()
-
-    all_images = []
-
-    # Verzamel alle afbeeldingen met hun class labels
-    for folder_name, class_id in CLASS_MAPPING.items():
-        folder_path = RAW_DATA_DIR / folder_name
-
-        if not folder_path.exists():
-            print(f"⚠ Folder niet gevonden: {folder_name}")
-            continue
-
-        images = get_image_files(folder_path)
-        print(f"✓ {folder_name}: {len(images)} afbeeldingen (class {class_id})")
-
-        for img_path in images:
-            all_images.append((img_path, class_id))
+    """Verwerk dataset"""
+    setup_directories()
+    
+    print(f"🔍 Zoeken naar data in: {RAW_DATA_DIR.resolve()}")
+    pairs = find_image_label_pairs(RAW_DATA_DIR)
+    
+    print(f"✓ Gevonden correcte paren: {len(pairs)}")
+    if not pairs:
+        print("❌ Geen data gevonden! Zorg dat images en .txt files in data/raw staan.")
+        return
 
     # Shuffle en split
     random.seed(42)
-    random.shuffle(all_images)
+    random.shuffle(pairs)
 
-    split_idx = int(len(all_images) * TRAIN_SPLIT)
-    train_images = all_images[:split_idx]
-    val_images = all_images[split_idx:]
+    split_idx = int(len(pairs) * TRAIN_SPLIT)
+    train_set = pairs[:split_idx]
+    val_set = pairs[split_idx:]
 
-    print(f"\n✓ Dataset split: {len(train_images)} train, {len(val_images)} val")
+    print(f"\n✓ Dataset split: {len(train_set)} train, {len(val_set)} val")
 
-    # Kopieer images naar de juiste class folders
-    for split_name, image_list in [('train', train_images), ('val', val_images)]:
-        for idx, (img_path, class_id) in enumerate(image_list):
-            
-            # Bepaal doel folder naam
-            class_name = CLASS_NAMES[class_id]
-            folder_name = f"{class_id}_{class_name}"
-            
-            # Nieuwe unieke bestandsnaam
-            new_name = f"{split_name}_{idx}_{img_path.name}"
-            
-            # Kopieer
-            dst_img = OUTPUT_DIR / split_name / folder_name / new_name
-            shutil.copy2(img_path, dst_img)
+    # Kopieer bestanden
+    def copy_files(dataset, split_name):
+        for img, lbl in dataset:
+            shutil.copy2(img, OUTPUT_DIR / split_name / "images" / img.name)
+            shutil.copy2(lbl, OUTPUT_DIR / split_name / "labels" / lbl.name)
 
+    copy_files(train_set, 'train')
+    copy_files(val_set, 'val')
+
+    # Create data.yaml
+    create_yaml()
+    
     print(f"✓ Dataset verwerkt en opgeslagen in: {OUTPUT_DIR}")
 
-def create_data_yaml():
-    """Niet strikt nodig voor standaard classification, maar handig voor info"""
-    pass
-
-def print_summary():
-    """Print dataset statistieken"""
-    print("\n" + "="*50)
-    print("DATASET SAMENVATTING")
-    print("="*50)
-
-    for split in ['train', 'val']:
-        img_dir = OUTPUT_DIR / split / 'images'
-        if img_dir.exists():
-            count = len(list(img_dir.glob('*')))
-            print(f"{split.upper()}: {count} afbeeldingen")
-
-    print("\nCLASSES:")
-    for idx, name in enumerate(CLASS_NAMES):
-        print(f"  {idx}: {name}")
-    print("="*50)
+def create_yaml():
+    """Maak data.yaml voor lokale training"""
+    yaml_data = {
+        'path': str(OUTPUT_DIR.resolve()),
+        'train': 'train/images',
+        'val': 'val/images',
+        'names': {i: name for i, name in enumerate(CLASS_NAMES)}
+    }
+    
+    with open(OUTPUT_DIR / 'data.yaml', 'w') as f:
+        yaml.dump(yaml_data, f)
+    
+    print("✓ data.yaml aangemaakt")
 
 if __name__ == "__main__":
-    print("🚀 Start dataset preprocessing...\n")
+    print("🚀 Start dataset preprocessing (Object Detection)...\n")
     process_dataset()
-    print_summary()
-    print("\n✅ Klaar! Dataset is klaar voor YOLO training.")
+    print("\n✅ Klaar! Run nu het training script of upload naar Colab.")

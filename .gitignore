@@ -33,10 +33,10 @@ training/runs/
 *.onnx
 
 # Data
-data/raw/
-data/processed/
-data/annotations/
-backend/uploads/
+#data/raw/
+#data/processed/
+#data/annotations/
+#backend/uploads/
 
 # Node
 node_modules/

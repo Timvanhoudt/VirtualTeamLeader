@@ -38,7 +38,7 @@ function Admin({ onBack }) {
       <div className="admin-header">
         <div className="header-left">
           <button onClick={onBack} className="back-btn">
-            ← Terug
+            Terug
           </button>
           <h1>Admin Dashboard</h1>
         </div>
@@ -421,7 +421,7 @@ function WorkplacesManagementTab({ workplaces, loading, onRefresh }) {
                 <input
                   type="text"
                   value={newWorkplace.name}
-                  onChange={(e) => setNewWorkplace({...newWorkplace, name: e.target.value})}
+                  onChange={(e) => setNewWorkplace({ ...newWorkplace, name: e.target.value })}
                   placeholder="Bijv. Werkplek A - Gereedschap"
                   required
                 />
@@ -431,7 +431,7 @@ function WorkplacesManagementTab({ workplaces, loading, onRefresh }) {
                 <label>Beschrijving</label>
                 <textarea
                   value={newWorkplace.description}
-                  onChange={(e) => setNewWorkplace({...newWorkplace, description: e.target.value})}
+                  onChange={(e) => setNewWorkplace({ ...newWorkplace, description: e.target.value })}
                   placeholder="Optionele beschrijving"
                   rows="3"
                 />
@@ -442,7 +442,7 @@ function WorkplacesManagementTab({ workplaces, loading, onRefresh }) {
                 <input
                   type="text"
                   value={newWorkplace.items}
-                  onChange={(e) => setNewWorkplace({...newWorkplace, items: e.target.value})}
+                  onChange={(e) => setNewWorkplace({ ...newWorkplace, items: e.target.value })}
                   placeholder="Bijv. hamer, schaar, sleutel"
                   required
                 />
@@ -473,7 +473,7 @@ function WorkplacesManagementTab({ workplaces, loading, onRefresh }) {
                 <input
                   type="text"
                   value={editWorkplace.name}
-                  onChange={(e) => setEditWorkplace({...editWorkplace, name: e.target.value})}
+                  onChange={(e) => setEditWorkplace({ ...editWorkplace, name: e.target.value })}
                   required
                 />
               </div>
@@ -482,7 +482,7 @@ function WorkplacesManagementTab({ workplaces, loading, onRefresh }) {
                 <label>Beschrijving</label>
                 <textarea
                   value={editWorkplace.description}
-                  onChange={(e) => setEditWorkplace({...editWorkplace, description: e.target.value})}
+                  onChange={(e) => setEditWorkplace({ ...editWorkplace, description: e.target.value })}
                   rows="3"
                 />
               </div>
@@ -492,7 +492,7 @@ function WorkplacesManagementTab({ workplaces, loading, onRefresh }) {
                 <input
                   type="text"
                   value={editWorkplace.items}
-                  onChange={(e) => setEditWorkplace({...editWorkplace, items: e.target.value})}
+                  onChange={(e) => setEditWorkplace({ ...editWorkplace, items: e.target.value })}
                   required
                 />
               </div>
@@ -849,22 +849,22 @@ function ReviewAnalysisTab({ workplaces, loading: workplacesLoading }) {
             </button>
           </div>
 
-        <div className="confidence-threshold-control">
-          <label htmlFor="confidence-slider">
-            🎯 Training Drempel: <strong>{confidenceThreshold}%</strong>
-          </label>
-          <input
-            id="confidence-slider"
-            type="range"
-            min="50"
-            max="95"
-            step="5"
-            value={confidenceThreshold}
-            onChange={(e) => setConfidenceThreshold(Number(e.target.value))}
-            className="confidence-slider"
-          />
-          <small>Analyses onder {confidenceThreshold}% gaan naar Model Prestaties</small>
-        </div>
+          <div className="confidence-threshold-control">
+            <label htmlFor="confidence-slider">
+              🎯 Training Drempel: <strong>{confidenceThreshold}%</strong>
+            </label>
+            <input
+              id="confidence-slider"
+              type="range"
+              min="50"
+              max="95"
+              step="5"
+              value={confidenceThreshold}
+              onChange={(e) => setConfidenceThreshold(Number(e.target.value))}
+              className="confidence-slider"
+            />
+            <small>Analyses onder {confidenceThreshold}% gaan naar Model Prestaties</small>
+          </div>
 
           <button onClick={downloadCSV} className="download-btn">
             📥 Download CSV
@@ -875,133 +875,133 @@ function ReviewAnalysisTab({ workplaces, loading: workplacesLoading }) {
       {/* Analyses Grid */}
       {selectedWorkplace && !loading && (
         <div className="analyses-grid">
-        {analyses.length === 0 ? (
-          <div className="empty-state">
-            <p>Geen analyses gevonden</p>
-            <p className="empty-hint">Start met foto's analyseren om hier resultaten te zien</p>
-          </div>
-        ) : (
-          analyses
-            .filter(analysis => !analysis.corrected_label)
-            .map((analysis) => (
-            <div key={analysis.id} className={`analysis-card ${analysis.status.toLowerCase()}`}>
-              {/* Image */}
-              <div className="analysis-image">
-                <img
-                  src={`${API_URL}/${analysis.image_path}`}
-                  alt={`Analyse ${analysis.id}`}
-                  onError={(e) => {
-                    e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"/>';
-                  }}
-                />
-                <div className={`status-badge ${analysis.status.toLowerCase()}`}>
-                  {analysis.status}
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="analysis-content">
-                <div className="analysis-header">
-                  <h3>{analysis.predicted_label}</h3>
-                  <span className="confidence">
-                    {(analysis.confidence * 100).toFixed(1)}%
-                  </span>
-                </div>
-
-                <div className="analysis-meta">
-                  <div className="meta-item">
-                    <span className="meta-label">Datum:</span>
-                    <span className="meta-value">{formatDate(analysis.created_at)}</span>
+          {analyses.length === 0 ? (
+            <div className="empty-state">
+              <p>Geen analyses gevonden</p>
+              <p className="empty-hint">Start met foto's analyseren om hier resultaten te zien</p>
+            </div>
+          ) : (
+            analyses
+              .filter(analysis => !analysis.corrected_label)
+              .map((analysis) => (
+                <div key={analysis.id} className={`analysis-card ${analysis.status.toLowerCase()}`}>
+                  {/* Image */}
+                  <div className="analysis-image">
+                    <img
+                      src={`${API_URL}/${analysis.image_path}`}
+                      alt={`Analyse ${analysis.id}`}
+                      onError={(e) => {
+                        e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"/>';
+                      }}
+                    />
+                    <div className={`status-badge ${analysis.status.toLowerCase()}`}>
+                      {analysis.status}
+                    </div>
                   </div>
 
-                  <div className="meta-item">
-                    <span className="meta-label">📱 Device:</span>
-                    <span className="meta-value">{analysis.device_id || 'onbekend'}</span>
-                  </div>
-
-                  {analysis.missing_items && analysis.missing_items.length > 0 && (
-                    <div className="meta-item">
-                      <span className="meta-label">Ontbrekend:</span>
-                      <span className="meta-value">
-                        {analysis.missing_items.join(', ')}
+                  {/* Content */}
+                  <div className="analysis-content">
+                    <div className="analysis-header">
+                      <h3>{analysis.predicted_label}</h3>
+                      <span className="confidence">
+                        {(analysis.confidence * 100).toFixed(1)}%
                       </span>
                     </div>
-                  )}
 
-                  {analysis.face_count > 0 && (
-                    <div className="meta-item privacy">
-                      <span className="meta-label">🔒 Gezichten:</span>
-                      <span className="meta-value">{analysis.face_count} geblurd</span>
+                    <div className="analysis-meta">
+                      <div className="meta-item">
+                        <span className="meta-label">Datum:</span>
+                        <span className="meta-value">{formatDate(analysis.created_at)}</span>
+                      </div>
+
+                      <div className="meta-item">
+                        <span className="meta-label">📱 Device:</span>
+                        <span className="meta-value">{analysis.device_id || 'onbekend'}</span>
+                      </div>
+
+                      {analysis.missing_items && analysis.missing_items.length > 0 && (
+                        <div className="meta-item">
+                          <span className="meta-label">Ontbrekend:</span>
+                          <span className="meta-value">
+                            {analysis.missing_items.join(', ')}
+                          </span>
+                        </div>
+                      )}
+
+                      {analysis.face_count > 0 && (
+                        <div className="meta-item privacy">
+                          <span className="meta-label">🔒 Gezichten:</span>
+                          <span className="meta-value">{analysis.face_count} geblurd</span>
+                        </div>
+                      )}
                     </div>
-                  )}
+
+                    {analysis.corrected_label && (
+                      <div className="correction-badge">
+                        ✏️ Gecorrigeerd naar: {analysis.corrected_label}
+                      </div>
+                    )}
+
+                    {/* Correction UI */}
+                    {correctingId === analysis.id ? (
+                      <div className="correction-panel">
+                        <p><strong>Welke items ontbreken?</strong></p>
+                        <div className="checkbox-items">
+                          <label className="checkbox-item">
+                            <input
+                              type="checkbox"
+                              checked={itemsMissing.hamer}
+                              onChange={() => toggleMissingItem('hamer')}
+                            />
+                            <span>🔨 Hamer ontbreekt</span>
+                          </label>
+                          <label className="checkbox-item">
+                            <input
+                              type="checkbox"
+                              checked={itemsMissing.schaar}
+                              onChange={() => toggleMissingItem('schaar')}
+                            />
+                            <span>✂️ Schaar ontbreekt</span>
+                          </label>
+                          <label className="checkbox-item">
+                            <input
+                              type="checkbox"
+                              checked={itemsMissing.sleutel}
+                              onChange={() => toggleMissingItem('sleutel')}
+                            />
+                            <span>🔑 Sleutel ontbreekt</span>
+                          </label>
+                        </div>
+                        <div className="correction-actions">
+                          <button onClick={() => submitCorrection(analysis.id)} className="submit-btn">
+                            ✓ Opslaan
+                          </button>
+                          <button onClick={() => correctAnalysis(analysis.id, 'N/A', 'Mens in beeld - geen beoordeling')} className="correct-btn privacy">
+                            🚫 Mens in beeld
+                          </button>
+                          <button onClick={() => setCorrectingId(null)} className="correct-btn cancel">
+                            ✖ Annuleer
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="action-buttons">
+                        <button
+                          onClick={() => correctAnalysis(analysis.id, analysis.predicted_class, analysis.predicted_label)}
+                          className="quick-approve-btn"
+                          title="AI voorspelling is correct"
+                        >
+                          ✓ AI heeft gelijk
+                        </button>
+                        <button onClick={() => startCorrecting(analysis.id)} className="edit-btn">
+                          ✏️ Corrigeer
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-
-                {analysis.corrected_label && (
-                  <div className="correction-badge">
-                    ✏️ Gecorrigeerd naar: {analysis.corrected_label}
-                  </div>
-                )}
-
-                {/* Correction UI */}
-                {correctingId === analysis.id ? (
-                  <div className="correction-panel">
-                    <p><strong>Welke items ontbreken?</strong></p>
-                    <div className="checkbox-items">
-                      <label className="checkbox-item">
-                        <input
-                          type="checkbox"
-                          checked={itemsMissing.hamer}
-                          onChange={() => toggleMissingItem('hamer')}
-                        />
-                        <span>🔨 Hamer ontbreekt</span>
-                      </label>
-                      <label className="checkbox-item">
-                        <input
-                          type="checkbox"
-                          checked={itemsMissing.schaar}
-                          onChange={() => toggleMissingItem('schaar')}
-                        />
-                        <span>✂️ Schaar ontbreekt</span>
-                      </label>
-                      <label className="checkbox-item">
-                        <input
-                          type="checkbox"
-                          checked={itemsMissing.sleutel}
-                          onChange={() => toggleMissingItem('sleutel')}
-                        />
-                        <span>🔑 Sleutel ontbreekt</span>
-                      </label>
-                    </div>
-                    <div className="correction-actions">
-                      <button onClick={() => submitCorrection(analysis.id)} className="submit-btn">
-                        ✓ Opslaan
-                      </button>
-                      <button onClick={() => correctAnalysis(analysis.id, 'N/A', 'Mens in beeld - geen beoordeling')} className="correct-btn privacy">
-                        🚫 Mens in beeld
-                      </button>
-                      <button onClick={() => setCorrectingId(null)} className="correct-btn cancel">
-                        ✖ Annuleer
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="action-buttons">
-                    <button
-                      onClick={() => correctAnalysis(analysis.id, analysis.predicted_class, analysis.predicted_label)}
-                      className="quick-approve-btn"
-                      title="AI voorspelling is correct"
-                    >
-                      ✓ AI heeft gelijk
-                    </button>
-                    <button onClick={() => startCorrecting(analysis.id)} className="edit-btn">
-                      ✏️ Corrigeer
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))
-        )}
+              ))
+          )}
         </div>
       )}
     </div>
@@ -1130,7 +1130,7 @@ function ProductionReviewSection({ workplace }) {
   return (
     <div className="production-review-section">
       {/* Training Selector */}
-      <div className="training-selector-section" style={{marginTop: '40px'}}>
+      <div className="training-selector-section" style={{ marginTop: '40px' }}>
         <div className="section-header">
           <h3>🎓 Training Selector</h3>
           <p className="section-description">
@@ -1138,7 +1138,7 @@ function ProductionReviewSection({ workplace }) {
           </p>
 
           {/* Confidence Threshold Control */}
-          <div className="confidence-threshold-control" style={{marginTop: '15px', marginBottom: '15px'}}>
+          <div className="confidence-threshold-control" style={{ marginTop: '15px', marginBottom: '15px' }}>
             <label htmlFor="confidence-slider">
               🎯 Training Drempel: <strong>{confidenceThreshold}%</strong>
             </label>
@@ -1848,7 +1848,7 @@ function ModelsTab({ workplaces }) {
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (file && file.name.endsWith('.pt')) {
-      setUploadData({...uploadData, file: file});
+      setUploadData({ ...uploadData, file: file });
     } else {
       alert('Alleen .pt bestanden zijn toegestaan');
       e.target.value = '';
@@ -2045,7 +2045,7 @@ function ModelsTab({ workplaces }) {
                 <input
                   type="text"
                   value={uploadData.version}
-                  onChange={(e) => setUploadData({...uploadData, version: e.target.value})}
+                  onChange={(e) => setUploadData({ ...uploadData, version: e.target.value })}
                   placeholder="Bijv. v1.0, v1.1 (optioneel, wordt auto-gegenereerd)"
                 />
                 <small>Laat leeg voor automatische versie nummering</small>
@@ -2059,7 +2059,7 @@ function ModelsTab({ workplaces }) {
                   min="0"
                   max="100"
                   value={uploadData.test_accuracy}
-                  onChange={(e) => setUploadData({...uploadData, test_accuracy: e.target.value})}
+                  onChange={(e) => setUploadData({ ...uploadData, test_accuracy: e.target.value })}
                   placeholder="Bijv. 95.5"
                 />
                 <small>Accuracy van validation set uit training</small>
@@ -2069,7 +2069,7 @@ function ModelsTab({ workplaces }) {
                 <label>Notities</label>
                 <textarea
                   value={uploadData.notes}
-                  onChange={(e) => setUploadData({...uploadData, notes: e.target.value})}
+                  onChange={(e) => setUploadData({ ...uploadData, notes: e.target.value })}
                   placeholder="Training details, dataset size, epochs, etc."
                   rows="4"
                 />
@@ -2149,7 +2149,7 @@ function ModelPerformanceTab({ workplaces, loading: workplacesLoading }) {
   return (
     <div className="model-performance-tab">
       <h2>🤖 Model Prestaties Dashboard</h2>
-      <p style={{color: '#666', marginBottom: '20px'}}>
+      <p style={{ color: '#666', marginBottom: '20px' }}>
         Overzicht van alle analyses en model prestaties voor alle werkplekken
       </p>
 
@@ -2216,7 +2216,7 @@ function ModelPerformanceTab({ workplaces, loading: workplacesLoading }) {
 
       {/* Workplace Breakdown */}
       {workplaces && workplaces.length > 0 && (
-        <div style={{marginTop: '30px'}}>
+        <div style={{ marginTop: '30px' }}>
           <h3>📍 Per Werkplek Overzicht</h3>
           <div className="workplace-stats">
             {workplaces.map(workplace => {
@@ -2237,26 +2237,26 @@ function ModelPerformanceTab({ workplaces, loading: workplacesLoading }) {
                 }}>
                   <div>
                     <strong>{workplace.name}</strong>
-                    <div style={{fontSize: '12px', color: '#666', marginTop: '5px'}}>
+                    <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
                       Items: {workplace.items ? workplace.items.join(', ') : 'Geen items'}
                     </div>
                   </div>
-                  <div style={{display: 'flex', gap: '20px'}}>
-                    <div style={{textAlign: 'center'}}>
-                      <div style={{fontSize: '20px', fontWeight: 'bold'}}>{wpAnalyses.length}</div>
-                      <div style={{fontSize: '11px', color: '#666'}}>Totaal</div>
+                  <div style={{ display: 'flex', gap: '20px' }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '20px', fontWeight: 'bold' }}>{wpAnalyses.length}</div>
+                      <div style={{ fontSize: '11px', color: '#666' }}>Totaal</div>
                     </div>
-                    <div style={{textAlign: 'center'}}>
-                      <div style={{fontSize: '20px', fontWeight: 'bold', color: '#48bb78'}}>{wpReviewed}</div>
-                      <div style={{fontSize: '11px', color: '#666'}}>Beoordeeld</div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#48bb78' }}>{wpReviewed}</div>
+                      <div style={{ fontSize: '11px', color: '#666' }}>Beoordeeld</div>
                     </div>
-                    <div style={{textAlign: 'center'}}>
-                      <div style={{fontSize: '20px', fontWeight: 'bold', color: '#4299e1'}}>{wpOK}</div>
-                      <div style={{fontSize: '11px', color: '#666'}}>OK</div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#4299e1' }}>{wpOK}</div>
+                      <div style={{ fontSize: '11px', color: '#666' }}>OK</div>
                     </div>
-                    <div style={{textAlign: 'center'}}>
-                      <div style={{fontSize: '20px', fontWeight: 'bold', color: '#f56565'}}>{wpNOK}</div>
-                      <div style={{fontSize: '11px', color: '#666'}}>NOK</div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#f56565' }}>{wpNOK}</div>
+                      <div style={{ fontSize: '11px', color: '#666' }}>NOK</div>
                     </div>
                   </div>
                 </div>

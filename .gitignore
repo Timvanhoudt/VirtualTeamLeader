@@ -40,6 +40,8 @@ backend/uploads/
 backend/data/training_exports/
 backend/data/exports/
 backend/data/temp_export_*/
+backend/data/*.zip
+backend/data/MASTER_DATASET.zip
 
 # Node
 node_modules/

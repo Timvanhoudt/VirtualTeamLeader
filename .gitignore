@@ -26,11 +26,8 @@ env/
 ENV/
 
 # AI Models & Training
-backend/models/*.pt
-backend/models/**/*.pt
-!backend/models/werkplek_detector_V4.pt
-!backend/models/werkplek_classifier_V1.pt
-backend/models/*.onnx
+# Models worden wel getracked (steeds opnieuw getraind)
+# backend/models/*.pt
 backend/models/yolo11n.pt
 
 # Data & Uploads (test data - niet pushen)

@@ -32,11 +32,16 @@ ENV/
 #*.weights
 #*.onnx
 
-# Data
-#data/raw/
-#data/processed/
-#data/annotations/
-#backend/uploads/
+# Data & Uploads (test data - niet pushen)
+data/raw/
+data/processed/
+data/annotations/
+backend/uploads/
+backend/data/training_exports/
+backend/data/exports/
+backend/data/temp_export_*/
+backend/data/*.zip
+backend/data/MASTER_DATASET.zip
 
 # Node
 node_modules/

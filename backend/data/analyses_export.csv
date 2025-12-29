@@ -1,0 +1,324 @@
+id,timestamp,image_path,predicted_class,predicted_label,confidence,status,missing_items,corrected_class,corrected_label,notes,face_count,training_candidate,exported_for_training,created_at,workplace_id,model_version,device_id,detected_hamer,detected_schaar,detected_sleutel,total_detections,model_type
+323,20251226_180127,uploads\inspect_20251226_180127.jpg,2,NOK - Hamer weg,0.7898503541946411,NOK,"[""hamer""]",2,NOK - Hamer weg,,0,0,0,2025-12-26 17:01:27,2,,Windows - 10/11 - Firefox,0,2,1,3,detection
+322,20251226_174040,uploads\inspect_20251226_174040.jpg,7,NOK - Hamer en sleutel weg,0.7310615181922913,NOK,"[""hamer"", ""sleutel""]",7,NOK - Hamer en sleutel weg,,0,0,0,2025-12-26 16:40:40,2,,Windows - 10/11 - Firefox,0,1,0,1,detection
+321,20251226_174025,uploads\inspect_20251226_174025.jpg,7,NOK - Hamer en sleutel weg,0.7771520614624023,NOK,"[""hamer"", ""sleutel""]",7,NOK - Hamer en sleutel weg,,0,0,0,2025-12-26 16:40:25,2,,Windows - 10/11 - Firefox,0,1,0,1,detection
+320,20251226_172858,uploads\inspect_20251226_172858.jpg,7,Onbekend,0.8164658546447754,UNKNOWN,[],,,,0,0,0,2025-12-26 16:28:58,2,,Windows - 10/11 - Firefox,0,1,0,1,detection
+319,20251226_171921,uploads\inspect_20251226_171921.jpg,7,NOK - Hamer en sleutel weg,0.7310615181922913,NOK,"[""hamer"", ""sleutel""]",,,,0,0,0,2025-12-26 16:19:21,2,,Windows - 10/11 - Firefox,0,1,0,1,detection
+318,20251226_171739,uploads\inspect_20251226_171739.jpg,6,NOK - Alleen sleutel,0.9999513626098633,NOK,"[""hamer"", ""schaar""]",,,,0,0,0,2025-12-26 16:17:39,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+317,20251226_171717,uploads\inspect_20251226_171717.jpg,6,NOK - Alleen sleutel,0.999976634979248,NOK,"[""hamer"", ""schaar""]",,,,0,0,0,2025-12-26 16:17:17,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+316,20251226_162606,uploads\inspect_20251226_162606.jpg,2,NOK - Hamer weg,0.8069646954536438,NOK,"[""hamer""]",1,NOK-hamer_schaar_ontbreekt,"{""missing_items"":[""hamer"",""schaar""],""false_positives"":[],""detailed_feedback"":{""hamer"":""ontbreekt"",""schaar"":""ontbreekt"",""sleutel"":""aanwezig""}}",0,1,0,2025-12-26 15:26:06,2,,Windows - 10/11 - Firefox,0,1,1,2,detection
+315,20251225_164727,uploads\inspect_20251225_164727.jpg,0,OK,0.9629481434822083,OK,[],,,,0,0,0,2025-12-25 15:47:27,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+314,20251224_230045,uploads\inspect_20251224_230045.jpg,3,NOK - Schaar weg,0.6354702711105347,NOK,"[""schaar""]",,,,0,0,0,2025-12-24 22:00:45,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+313,20251224_225959,uploads\inspect_20251224_225959.jpg,0,OK,0.4366509020328522,OK,[],,,,0,0,0,2025-12-24 21:59:59,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+312,20251224_225908,uploads\inspect_20251224_225908.jpg,1,NOK - Alles weg,0.5,NOK,"[""hamer"", ""schaar"", ""sleutel""]",,,,0,0,0,2025-12-24 21:59:08,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,detection
+311,20251224_210345,uploads\inspect_20251224_210345.jpg,0,OK,0.8252130746841431,OK,[],,,,0,0,0,2025-12-24 20:03:45,2,,iPhone - iOS 18.7 - Safari,1,1,1,3,detection
+310,20251224_210317,uploads\inspect_20251224_210317.jpg,5,NOK - Sleutel weg,0.8113895058631897,NOK,"[""sleutel""]",,,,0,0,0,2025-12-24 20:03:17,2,,iPhone - iOS 18.7 - Safari,1,2,0,3,detection
+309,20251224_210226,uploads\inspect_20251224_210226.jpg,0,OK,0.7654767036437988,OK,[],,,,0,0,0,2025-12-24 20:02:26,2,,iPhone - iOS 18.7 - Safari,1,1,1,3,detection
+308,20251224_210110,uploads\inspect_20251224_210110.jpg,0,OK,0.8356643915176392,OK,[],,,,0,0,0,2025-12-24 20:01:11,2,,iPhone - iOS 18.7 - Safari,1,1,3,5,detection
+307,20251224_210036,uploads\inspect_20251224_210036.jpg,7,NOK - Hamer en sleutel weg,0.2512661814689636,NOK,"[""hamer"", ""sleutel""]",,,,0,0,0,2025-12-24 20:00:36,2,,iPhone - iOS 18.7 - Safari,0,1,0,1,detection
+306,20251224_205957,uploads\inspect_20251224_205957.jpg,3,NOK - Schaar weg,0.39681729674339294,NOK,"[""schaar""]",,,,0,0,0,2025-12-24 19:59:57,2,,iPhone - iOS 18.7 - Safari,1,0,2,3,detection
+305,20251224_205928,uploads\inspect_20251224_205928.jpg,6,NOK - Alleen sleutel,0.42073139548301697,NOK,"[""hamer"", ""schaar""]",,,,0,0,0,2025-12-24 19:59:29,2,,iPhone - iOS 18.7 - Safari,0,0,2,2,detection
+304,20251224_205852,uploads\inspect_20251224_205852.jpg,0,OK,0.8295934796333313,OK,[],,,,0,0,0,2025-12-24 19:58:52,2,,iPhone - iOS 18.7 - Safari,1,1,1,3,detection
+303,20251224_201144,uploads\inspect_20251224_201144.jpg,1,NOK - Alles weg,0.5,NOK,"[""hamer"", ""schaar"", ""sleutel""]",,,,0,0,0,2025-12-24 19:11:44,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,detection
+302,20251224_201055,uploads\inspect_20251224_201055.jpg,1,NOK - Alles weg,0.5,NOK,"[""hamer"", ""schaar"", ""sleutel""]",,,,0,0,0,2025-12-24 19:10:56,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,detection
+301,20251224_170634,uploads\inspect_20251224_170634.jpg,6,NOK - Alleen sleutel,0.11101246625185013,NOK,"[""hamer"", ""schaar""]",,,,0,0,0,2025-12-24 16:06:34,2,,iPhone - iOS 18.7 - Safari,0,0,1,1,detection
+300,20251224_170453,uploads\inspect_20251224_170453.jpg,4,NOK - Schaar en sleutel weg,0.4957556426525116,NOK,"[""schaar"", ""sleutel""]",1,NOK-alles_weg,,0,1,0,2025-12-24 16:04:53,2,,iPhone - iOS 18.7 - Safari,4,0,0,4,detection
+299,20251224_170432,uploads\inspect_20251224_170432.jpg,6,NOK - Alleen sleutel,0.7542941570281982,NOK,"[""hamer"", ""schaar""]",,,,0,0,0,2025-12-24 16:04:32,2,,Windows - 10/11 - Firefox,0,0,1,1,detection
+298,20251224_152837,uploads\inspect_20251224_152837.jpg,2,NOK - Hamer weg,0.7701667547225952,NOK,"[""hamer""]",6,NOK-alleen_sleutel,,0,1,1,2025-12-24 14:28:37,2,,Windows - 10/11 - Firefox,0,1,1,2,detection
+297,20251224_151420,uploads\inspect_20251224_151420.jpg,6,NOK - Alleen sleutel,0.7727519273757935,NOK,"[""hamer"", ""schaar""]",6,NOK - Alleen sleutel,,0,0,0,2025-12-24 14:14:20,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+296,20251224_151351,uploads\inspect_20251224_151351.jpg,2,NOK - Hamer weg,0.7932991981506348,NOK,"[""hamer""]",,,,0,0,0,2025-12-24 14:13:51,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+295,20251224_151208,uploads\inspect_20251224_151208.jpg,0,OK,0.9852004051208496,OK,[],,,,0,0,0,2025-12-24 14:12:08,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+294,20251224_151035,uploads\inspect_20251224_151035.jpg,2,NOK - Hamer weg,0.87,NOK,"[""hamer""]",,,,0,0,0,2025-12-24 14:10:35,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+293,20251224_150956,uploads\inspect_20251224_150956.jpg,2,NOK - Hamer weg,0.87,NOK,"[""hamer""]",,,,0,0,0,2025-12-24 14:09:56,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+292,20251224_150818,uploads\inspect_20251224_150818.jpg,4,NOK - Schaar en sleutel weg,0.831747829914093,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-24 14:08:18,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+291,20251224_150648,uploads\inspect_20251224_150648.jpg,4,NOK - Schaar en sleutel weg,0.6665281653404236,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-24 14:06:48,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+290,20251224_150605,uploads\inspect_20251224_150605.jpg,4,NOK - Schaar en sleutel weg,0.8590632081031799,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-24 14:06:05,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+289,20251224_150317,uploads\inspect_20251224_150317.jpg,1,NOK - Alles weg,0.3150710463523865,NOK,"[""hamer"", ""schaar"", ""sleutel""]",,,,0,0,0,2025-12-24 14:03:17,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+288,20251224_132700,uploads\inspect_20251224_132700.jpg,5,NOK - Sleutel weg,0.6827002763748169,NOK,"[""sleutel""]",,,,0,0,0,2025-12-24 12:27:00,2,,Linux - Chrome,0,0,0,0,classification
+287,20251224_132618,uploads\inspect_20251224_132618.jpg,0,OK,0.7847750186920166,OK,[],,,,0,0,0,2025-12-24 12:26:18,2,,Linux - Chrome,0,0,0,0,classification
+286,20251224_132135,uploads\inspect_20251224_132135.jpg,1,NOK - Alles weg,0.5,NOK,"[""hamer"", ""schaar"", ""sleutel""]",,,,0,0,0,2025-12-24 12:21:36,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+285,20251224_131221,uploads\inspect_20251224_131221.jpg,0,OK,0.766054630279541,OK,[],,,,0,0,0,2025-12-24 12:12:21,2,,Linux - Chrome,0,0,0,0,classification
+284,20251224_131119,uploads\inspect_20251224_131119.jpg,4,NOK - Schaar en sleutel weg,0.792493462562561,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-24 12:11:19,2,,Linux - Chrome,0,0,0,0,classification
+283,20251224_131013,uploads\inspect_20251224_131013.jpg,3,NOK - Schaar weg,0.8197321891784668,NOK,"[""schaar""]",,,,0,0,0,2025-12-24 12:10:13,2,,Linux - Chrome,0,0,0,0,classification
+282,20251224_130903,uploads\inspect_20251224_130903.jpg,0,OK,0.8388497829437256,OK,[],,,,0,0,0,2025-12-24 12:09:03,2,,Linux - Chrome,0,0,0,0,classification
+281,20251224_130755,uploads\inspect_20251224_130755.jpg,0,OK,0.7718576788902283,OK,[],,,,0,0,0,2025-12-24 12:07:55,2,,Linux - Chrome,0,0,0,0,classification
+280,20251224_130658,uploads\inspect_20251224_130658.jpg,0,OK,0.7890732288360596,OK,[],,,,0,0,0,2025-12-24 12:06:58,2,,Linux - Chrome,0,0,0,0,classification
+279,20251224_130529,uploads\inspect_20251224_130529.jpg,0,OK,0.819301426410675,OK,[],,,,0,0,0,2025-12-24 12:05:29,2,,Linux - Chrome,0,0,0,0,classification
+278,20251224_111431,uploads\inspect_20251224_111431.jpg,0,OK,0.8238357901573181,OK,[],,,,0,0,0,2025-12-24 10:14:32,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+277,20251224_111337,uploads\inspect_20251224_111337.jpg,0,OK,0.8747604489326477,OK,[],,,,0,0,0,2025-12-24 10:13:37,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+276,20251224_111253,uploads\inspect_20251224_111253.jpg,2,NOK - Hamer weg,0.9890435934066772,NOK,"[""hamer""]",,,,0,0,0,2025-12-24 10:12:53,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+275,20251224_111235,uploads\inspect_20251224_111235.jpg,0,OK,0.999901533126831,OK,[],,,,0,0,0,2025-12-24 10:12:35,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+274,20251223_233247,uploads\inspect_20251223_233247.jpg,0,OK,0.7253850698471069,OK,[],,,,0,0,0,2025-12-23 22:32:47,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+273,20251223_233206,uploads\inspect_20251223_233206.jpg,0,OK,0.7856760621070862,OK,[],,,,0,0,0,2025-12-23 22:32:06,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+272,20251223_233125,uploads\inspect_20251223_233125.jpg,0,OK,0.8419182300567627,OK,[],,,,0,0,0,2025-12-23 22:31:25,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+271,20251223_233049,uploads\inspect_20251223_233049.jpg,0,OK,0.8489927053451538,OK,[],,,,0,0,0,2025-12-23 22:30:49,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+270,20251223_233027,uploads\inspect_20251223_233027.jpg,0,OK,0.8227041959762573,OK,[],,,,0,0,0,2025-12-23 22:30:27,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+269,20251223_233009,uploads\inspect_20251223_233009.jpg,0,OK,0.8478392362594604,OK,[],,,,0,0,0,2025-12-23 22:30:09,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+268,20251223_232949,uploads\inspect_20251223_232949.jpg,6,NOK - Alleen sleutel,0.24838390946388245,NOK,"[""hamer"", ""schaar""]",,,,0,0,0,2025-12-23 22:29:49,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+267,20251223_232802,uploads\inspect_20251223_232802.jpg,0,OK,0.8574637174606323,OK,[],,,,0,0,0,2025-12-23 22:28:03,2,,Linux - Chrome,0,0,0,0,classification
+266,20251223_232658,uploads\inspect_20251223_232658.jpg,0,OK,0.7648319005966187,OK,[],,,,0,0,0,2025-12-23 22:26:59,2,,Linux - Chrome,0,0,0,0,classification
+265,20251223_232626,uploads\inspect_20251223_232626.jpg,0,OK,0.7737030982971191,OK,[],,,,0,0,0,2025-12-23 22:26:26,2,,Linux - Chrome,0,0,0,0,classification
+264,20251223_232551,uploads\inspect_20251223_232551.jpg,0,OK,0.7482503652572632,OK,[],,,,0,0,0,2025-12-23 22:25:51,2,,Linux - Chrome,0,0,0,0,classification
+263,20251223_232515,uploads\inspect_20251223_232515.jpg,0,OK,0.7929416298866272,OK,[],,,,0,0,0,2025-12-23 22:25:16,2,,Linux - Chrome,0,0,0,0,classification
+262,20251223_232451,uploads\inspect_20251223_232451.jpg,0,OK,0.7268587350845337,OK,[],,,,0,0,0,2025-12-23 22:24:51,2,,Linux - Chrome,0,0,0,0,classification
+261,20251223_232425,uploads\inspect_20251223_232425.jpg,0,OK,0.7797172665596008,OK,[],,,,0,0,0,2025-12-23 22:24:26,2,,Linux - Chrome,0,0,0,0,classification
+260,20251223_232357,uploads\inspect_20251223_232357.jpg,0,OK,0.8244490027427673,OK,[],,,,0,0,0,2025-12-23 22:23:57,2,,Linux - Chrome,0,0,0,0,classification
+259,20251223_232327,uploads\inspect_20251223_232327.jpg,0,OK,0.7522543668746948,OK,[],,,,0,0,0,2025-12-23 22:23:27,2,,Linux - Chrome,0,0,0,0,classification
+258,20251223_232237,uploads\inspect_20251223_232237.jpg,0,OK,0.7111392617225647,OK,[],,,,0,0,0,2025-12-23 22:22:37,2,,Linux - Chrome,0,0,0,0,classification
+257,20251223_232153,uploads\inspect_20251223_232153.jpg,0,OK,0.8031262755393982,OK,[],,,,0,0,0,2025-12-23 22:21:53,2,,Linux - Chrome,0,0,0,0,classification
+256,20251223_232114,uploads\inspect_20251223_232114.jpg,0,OK,0.7687245011329651,OK,[],,,,0,0,0,2025-12-23 22:21:14,2,,Linux - Chrome,0,0,0,0,classification
+255,20251223_232039,uploads\inspect_20251223_232039.jpg,0,OK,0.834701657295227,OK,[],,,,0,0,0,2025-12-23 22:20:39,2,,Linux - Chrome,0,0,0,0,classification
+254,20251223_231815,uploads\inspect_20251223_231815.jpg,2,NOK - Hamer weg,0.7530677318572998,NOK,"[""hamer""]",,,,0,0,0,2025-12-23 22:18:15,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+253,20251223_231700,uploads\inspect_20251223_231700.jpg,0,OK,0.8135571479797363,OK,[],,,,0,0,0,2025-12-23 22:17:00,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+252,20251223_231254,uploads\inspect_20251223_231254.jpg,0,OK,0.8297442197799683,OK,[],,,,0,0,0,2025-12-23 22:12:55,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+251,20251223_231130,uploads\inspect_20251223_231130.jpg,0,OK,0.8166071176528931,OK,[],,,,0,0,0,2025-12-23 22:11:30,2,,Linux - Chrome,0,0,0,0,classification
+250,20251223_231050,uploads\inspect_20251223_231050.jpg,0,OK,0.7845141887664795,OK,[],,,,0,0,0,2025-12-23 22:10:50,2,,Linux - Chrome,0,0,0,0,classification
+249,20251223_221952,uploads\inspect_20251223_221952.jpg,6,NOK - Alleen sleutel,0.8322336673736572,NOK,"[""hamer"", ""schaar""]",,,,0,0,0,2025-12-23 21:19:53,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+248,20251223_221657,uploads\inspect_20251223_221657.jpg,0,OK,0.7729005217552185,OK,[],,,,0,0,0,2025-12-23 21:16:57,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+247,20251223_221533,uploads\inspect_20251223_221533.jpg,4,NOK - Schaar en sleutel weg,0.64798903465271,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-23 21:15:33,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+246,20251223_221335,uploads\inspect_20251223_221335.jpg,7,NOK - Hamer en sleutel weg,0.8271927237510681,NOK,"[""hamer"", ""sleutel""]",,,,0,0,0,2025-12-23 21:13:35,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+245,20251223_221106,uploads\inspect_20251223_221106.jpg,6,NOK - Alleen sleutel,0.21000345051288605,NOK,"[""hamer"", ""schaar""]",,,,0,0,0,2025-12-23 21:11:06,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+244,20251223_220709,uploads\inspect_20251223_220709.jpg,0,OK,0.8237817287445068,OK,[],,,,0,0,0,2025-12-23 21:07:09,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+243,20251223_220609,uploads\inspect_20251223_220609.jpg,3,NOK - Schaar weg,0.8260572552680969,NOK,"[""schaar""]",,,,0,0,0,2025-12-23 21:06:09,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+242,20251223_220539,uploads\inspect_20251223_220539.jpg,2,NOK - Hamer weg,0.7714095115661621,NOK,"[""hamer""]",,,,0,0,0,2025-12-23 21:05:39,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+241,20251223_215802,uploads\inspect_20251223_215802.jpg,3,NOK - Schaar weg,0.7932991981506348,NOK,"[""schaar""]",,,,0,0,0,2025-12-23 20:58:02,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+240,20251223_215711,uploads\inspect_20251223_215711.jpg,3,NOK - Schaar weg,0.7711393237113953,NOK,"[""schaar""]",,,,0,0,0,2025-12-23 20:57:12,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+239,20251222_215450,uploads\inspect_20251222_215450.jpg,3,NOK - Schaar weg,0.9447082877159119,NOK,"[""schaar""]",,,,0,0,0,2025-12-22 20:54:50,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+238,20251222_215433,uploads\inspect_20251222_215433.jpg,3,NOK - Schaar weg,0.9297437071800232,NOK,"[""schaar""]",,,,0,0,0,2025-12-22 20:54:33,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+237,20251222_215358,uploads\inspect_20251222_215358.jpg,0,OK,0.9923624992370605,OK,[],,,,0,0,0,2025-12-22 20:53:58,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+236,20251222_215336,uploads\inspect_20251222_215336.jpg,5,NOK - Sleutel weg,0.7428786754608154,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 20:53:36,2,,Linux - Chrome,0,0,0,0,classification
+235,20251222_215310,uploads\inspect_20251222_215310.jpg,0,OK,0.6606637835502625,OK,[],,,,0,0,0,2025-12-22 20:53:10,2,,Linux - Chrome,0,0,0,0,classification
+234,20251222_215240,uploads\inspect_20251222_215240.jpg,5,NOK - Sleutel weg,0.9200488328933716,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 20:52:40,2,,Linux - Chrome,0,0,0,0,classification
+233,20251222_215202,uploads\inspect_20251222_215202.jpg,0,OK,0.8990025520324707,OK,[],,,,0,0,0,2025-12-22 20:52:02,2,,Linux - Chrome,0,0,0,0,classification
+232,20251222_215120,uploads\inspect_20251222_215120.jpg,5,NOK - Sleutel weg,0.8822079300880432,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 20:51:20,2,,Linux - Chrome,0,0,0,0,classification
+231,20251222_215021,uploads\inspect_20251222_215021.jpg,5,NOK - Sleutel weg,0.7230053544044495,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 20:50:22,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+230,20251222_214945,uploads\inspect_20251222_214945.jpg,0,OK,0.9923624992370605,OK,[],,,,0,0,0,2025-12-22 20:49:45,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+229,20251222_214912,uploads\inspect_20251222_214912.jpg,0,OK,0.9751206636428833,OK,[],,,,0,0,0,2025-12-22 20:49:12,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+228,20251222_214842,uploads\inspect_20251222_214842.jpg,5,NOK - Sleutel weg,0.8845584988594055,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 20:48:42,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+227,20251222_214657,uploads\inspect_20251222_214657.jpg,5,NOK - Sleutel weg,0.9340859055519104,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 20:46:57,2,,Linux - Chrome,0,0,0,0,classification
+226,20251222_214627,uploads\inspect_20251222_214627.jpg,5,NOK - Sleutel weg,0.8784533739089966,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 20:46:27,2,,Linux - Chrome,0,0,0,0,classification
+225,20251222_214515,uploads\inspect_20251222_214515.jpg,5,NOK - Sleutel weg,0.779650092124939,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 20:45:15,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+224,20251222_214430,uploads\inspect_20251222_214430.jpg,5,NOK - Sleutel weg,0.7404744029045105,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 20:44:30,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+223,20251222_214335,uploads\inspect_20251222_214335.jpg,5,NOK - Sleutel weg,0.5232476592063904,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 20:43:35,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+222,20251222_214215,uploads\inspect_20251222_214215.jpg,0,OK,0.9741962552070618,OK,[],,,,0,0,0,2025-12-22 20:42:15,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+221,20251222_214150,uploads\inspect_20251222_214150.jpg,0,OK,0.9396329522132874,OK,[],,,,0,0,0,2025-12-22 20:41:50,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+220,20251222_214120,uploads\inspect_20251222_214120.jpg,0,OK,0.9681928753852844,OK,[],,,,0,0,0,2025-12-22 20:41:20,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+219,20251222_214049,uploads\inspect_20251222_214049.jpg,3,NOK - Schaar weg,0.9576713442802429,NOK,"[""schaar""]",,,,0,0,0,2025-12-22 20:40:49,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+218,20251222_214016,uploads\inspect_20251222_214016.jpg,3,NOK - Schaar weg,0.7664985656738281,NOK,"[""schaar""]",,,,0,0,0,2025-12-22 20:40:16,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+217,20251222_213958,uploads\inspect_20251222_213958.jpg,0,OK,0.9852002859115601,OK,[],,,,0,0,0,2025-12-22 20:39:58,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+216,20251222_213937,uploads\inspect_20251222_213937.jpg,0,OK,0.9717934727668762,OK,[],,,,0,0,0,2025-12-22 20:39:37,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+215,20251222_212431,uploads\inspect_20251222_212431.jpg,4,NOK - Schaar en sleutel weg,0.9928961396217346,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-22 20:24:31,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+214,20251222_212416,uploads\inspect_20251222_212416.jpg,4,NOK - Schaar en sleutel weg,0.9928961396217346,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-22 20:24:16,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+213,20251222_212402,uploads\inspect_20251222_212402.jpg,2,NOK - Hamer weg,0.9980161190032959,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 20:24:02,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+212,20251222_212347,uploads\inspect_20251222_212347.jpg,2,NOK - Hamer weg,0.9985414743423462,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 20:23:47,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+211,20251222_211906,uploads\inspect_20251222_211906.jpg,4,NOK - Schaar en sleutel weg,0.9971766471862793,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-22 20:19:06,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+210,20251222_211658,uploads\inspect_20251222_211658.jpg,1,NOK - Alles weg,0.9774327278137207,NOK,"[""hamer"", ""schaar"", ""sleutel""]",,,,0,0,0,2025-12-22 20:16:58,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+209,20251222_211514,uploads\inspect_20251222_211514.jpg,2,NOK - Hamer weg,0.9992579817771912,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 20:15:14,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+208,20251222_211459,uploads\inspect_20251222_211459.jpg,2,NOK - Hamer weg,0.9890435934066772,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 20:14:59,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+207,20251222_211257,uploads\inspect_20251222_211257.jpg,4,NOK - Schaar en sleutel weg,0.9844404458999634,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-22 20:12:57,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+206,20251222_211230,uploads\inspect_20251222_211230.jpg,4,NOK - Schaar en sleutel weg,0.9488999843597412,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-22 20:12:30,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+205,20251222_211217,uploads\inspect_20251222_211217.jpg,4,NOK - Schaar en sleutel weg,0.9582875967025757,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-22 20:12:17,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+204,20251222_210936,uploads\inspect_20251222_210936.jpg,4,NOK - Schaar en sleutel weg,0.9758384823799133,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-22 20:09:36,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+203,20251222_210856,uploads\inspect_20251222_210856.jpg,4,NOK - Schaar en sleutel weg,0.9907440543174744,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-22 20:08:56,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+202,20251222_210811,uploads\inspect_20251222_210811.jpg,4,NOK - Schaar en sleutel weg,0.9971766471862793,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-22 20:08:11,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+201,20251222_210739,uploads\inspect_20251222_210739.jpg,4,NOK - Schaar en sleutel weg,0.9930790066719055,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-22 20:07:39,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+200,20251222_205802,uploads\inspect_20251222_205802.jpg,3,NOK - Schaar weg,0.5923619866371155,NOK,"[""schaar""]",,,,0,0,0,2025-12-22 19:58:02,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+199,20251222_205730,uploads\inspect_20251222_205730.jpg,6,NOK - Alleen sleutel,0.750038206577301,NOK,"[""hamer"", ""schaar""]",,,,0,0,0,2025-12-22 19:57:30,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+198,20251222_205712,uploads\inspect_20251222_205712.jpg,6,NOK - Alleen sleutel,0.8168399333953857,NOK,"[""hamer"", ""schaar""]",,,,0,0,0,2025-12-22 19:57:12,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+197,20251222_205657,uploads\inspect_20251222_205657.jpg,6,NOK - Alleen sleutel,0.6901434659957886,NOK,"[""hamer"", ""schaar""]",,,,0,0,0,2025-12-22 19:56:57,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+196,20251222_205633,uploads\inspect_20251222_205633.jpg,6,NOK - Alleen sleutel,0.9998325109481812,NOK,"[""hamer"", ""schaar""]",,,,0,0,0,2025-12-22 19:56:33,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+195,20251222_204828,uploads\inspect_20251222_204828.jpg,4,NOK - Schaar en sleutel weg,0.944531261920929,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-22 19:48:28,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+194,20251222_204747,uploads\inspect_20251222_204747.jpg,4,NOK - Schaar en sleutel weg,0.9557344317436218,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-22 19:47:47,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+193,20251222_204505,uploads\inspect_20251222_204505.jpg,2,NOK - Hamer weg,0.87,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 19:45:05,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+192,20251222_204435,uploads\inspect_20251222_204435.jpg,2,NOK - Hamer weg,0.87,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 19:44:35,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+191,20251222_204402,uploads\inspect_20251222_204402.jpg,2,NOK - Hamer weg,0.87,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 19:44:02,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+190,20251222_204334,uploads\inspect_20251222_204334.jpg,2,NOK - Hamer weg,0.87,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 19:43:34,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+189,20251222_204008,uploads\inspect_20251222_204008.jpg,6,NOK - Alleen sleutel,0.9999791383743286,NOK,"[""hamer"", ""schaar""]",,,,0,0,0,2025-12-22 19:40:08,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+188,20251222_202640,uploads\inspect_20251222_202640.jpg,2,NOK - Hamer weg,0.9065025448799133,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 19:26:40,2,,Linux - Chrome,0,0,0,0,classification
+187,20251222_202622,uploads\inspect_20251222_202622.jpg,0,OK,0.740250289440155,OK,[],,,,0,0,0,2025-12-22 19:26:22,2,,Linux - Chrome,0,0,0,0,classification
+186,20251222_202600,uploads\inspect_20251222_202600.jpg,2,NOK - Hamer weg,0.5014427900314331,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 19:26:00,2,,Linux - Chrome,0,0,0,0,classification
+185,20251222_202543,uploads\inspect_20251222_202543.jpg,2,NOK - Hamer weg,0.8851956725120544,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 19:25:43,2,,Linux - Chrome,0,0,0,0,classification
+184,20251222_202529,uploads\inspect_20251222_202529.jpg,0,OK,0.605629026889801,OK,[],,,,0,0,0,2025-12-22 19:25:29,2,,Linux - Chrome,0,0,0,0,classification
+183,20251222_202513,uploads\inspect_20251222_202513.jpg,2,NOK - Hamer weg,0.6890430450439453,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 19:25:13,2,,Linux - Chrome,0,0,0,0,classification
+182,20251222_202445,uploads\inspect_20251222_202445.jpg,3,NOK - Schaar weg,0.47146183252334595,NOK,"[""schaar""]",,,,0,0,0,2025-12-22 19:24:45,2,,Linux - Chrome,0,0,0,0,classification
+181,20251222_202421,uploads\inspect_20251222_202421.jpg,2,NOK - Hamer weg,0.4644034206867218,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 19:24:22,2,,Linux - Chrome,0,0,0,0,classification
+180,20251222_202359,uploads\inspect_20251222_202359.jpg,5,NOK - Sleutel weg,0.8032739162445068,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 19:23:59,2,,Linux - Chrome,0,0,0,0,classification
+179,20251222_202340,uploads\inspect_20251222_202340.jpg,0,OK,0.4768073856830597,OK,[],,,,0,0,0,2025-12-22 19:23:40,2,,Linux - Chrome,0,0,0,0,classification
+178,20251222_202325,uploads\inspect_20251222_202325.jpg,0,OK,0.674243688583374,OK,[],,,,0,0,0,2025-12-22 19:23:25,2,,Linux - Chrome,0,0,0,0,classification
+177,20251222_202301,uploads\inspect_20251222_202301.jpg,3,NOK - Schaar weg,0.9973058700561523,NOK,"[""schaar""]",,,,0,0,0,2025-12-22 19:23:01,2,,Linux - Chrome,0,0,0,0,classification
+176,20251222_202243,uploads\inspect_20251222_202243.jpg,3,NOK - Schaar weg,0.9996631145477295,NOK,"[""schaar""]",,,,0,0,0,2025-12-22 19:22:43,2,,Linux - Chrome,0,0,0,0,classification
+175,20251222_202216,uploads\inspect_20251222_202216.jpg,3,NOK - Schaar weg,0.5258157849311829,NOK,"[""schaar""]",,,,0,0,0,2025-12-22 19:22:16,2,,Linux - Chrome,0,0,0,0,classification
+174,20251222_202154,uploads\inspect_20251222_202154.jpg,2,NOK - Hamer weg,0.8266018629074097,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 19:21:54,2,,Linux - Chrome,0,0,0,0,classification
+173,20251222_202136,uploads\inspect_20251222_202136.jpg,0,OK,0.9395214319229126,OK,[],,,,0,0,0,2025-12-22 19:21:36,2,,Linux - Chrome,0,0,0,0,classification
+172,20251222_202116,uploads\inspect_20251222_202116.jpg,2,NOK - Hamer weg,0.7609121799468994,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 19:21:16,2,,Linux - Chrome,0,0,0,0,classification
+171,20251222_202047,uploads\inspect_20251222_202047.jpg,3,NOK - Schaar weg,0.9840525388717651,NOK,"[""schaar""]",,,,0,0,0,2025-12-22 19:20:47,2,,Linux - Chrome,0,0,0,0,classification
+170,20251222_202015,uploads\inspect_20251222_202015.jpg,3,NOK - Schaar weg,0.531894326210022,NOK,"[""schaar""]",,,,0,0,0,2025-12-22 19:20:15,2,,Linux - Chrome,0,0,0,0,classification
+169,20251222_201951,uploads\inspect_20251222_201951.jpg,3,NOK - Schaar weg,0.9138393998146057,NOK,"[""schaar""]",,,,0,0,0,2025-12-22 19:19:51,2,,Linux - Chrome,0,0,0,0,classification
+168,20251222_201914,uploads\inspect_20251222_201914.jpg,4,NOK - Schaar en sleutel weg,0.507295548915863,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-22 19:19:14,2,,Linux - Chrome,0,0,0,0,classification
+167,20251222_201837,uploads\inspect_20251222_201837.jpg,3,NOK - Schaar weg,0.5447654724121094,NOK,"[""schaar""]",,,,0,0,0,2025-12-22 19:18:37,2,,Linux - Chrome,0,0,0,0,classification
+166,20251222_201817,uploads\inspect_20251222_201817.jpg,3,NOK - Schaar weg,0.6892130970954895,NOK,"[""schaar""]",,,,0,0,0,2025-12-22 19:18:17,2,,Linux - Chrome,0,0,0,0,classification
+165,20251222_201758,uploads\inspect_20251222_201758.jpg,0,OK,0.4115831255912781,OK,[],,,,0,0,0,2025-12-22 19:17:58,2,,Linux - Chrome,0,0,0,0,classification
+164,20251222_201737,uploads\inspect_20251222_201737.jpg,4,NOK - Schaar en sleutel weg,0.6445874571800232,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-22 19:17:37,2,,Linux - Chrome,0,0,0,0,classification
+163,20251222_201719,uploads\inspect_20251222_201719.jpg,0,OK,0.5328704118728638,OK,[],,,,0,0,0,2025-12-22 19:17:19,2,,Linux - Chrome,0,0,0,0,classification
+162,20251222_201610,uploads\inspect_20251222_201610.jpg,6,NOK - Alleen sleutel,0.9998325109481812,NOK,"[""hamer"", ""schaar""]",,,,0,0,0,2025-12-22 19:16:10,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+161,20251222_201551,uploads\inspect_20251222_201551.jpg,1,NOK - Alles weg,0.9774327278137207,NOK,"[""hamer"", ""schaar"", ""sleutel""]",,,,0,0,0,2025-12-22 19:15:51,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+160,20251222_201524,uploads\inspect_20251222_201524.jpg,2,NOK - Hamer weg,0.43357253074645996,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 19:15:24,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+159,20251222_201459,uploads\inspect_20251222_201459.jpg,0,OK,0.9663917422294617,OK,[],,,,0,0,0,2025-12-22 19:14:59,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+158,20251222_201411,uploads\inspect_20251222_201411.jpg,0,OK,0.8837041854858398,OK,[],,,,0,0,0,2025-12-22 19:14:12,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+157,20251222_201345,uploads\inspect_20251222_201345.jpg,2,NOK - Hamer weg,0.4750704765319824,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 19:13:45,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+156,20251222_201325,uploads\inspect_20251222_201325.jpg,0,OK,0.9674974083900452,OK,[],,,,0,0,0,2025-12-22 19:13:25,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+155,20251222_201153,uploads\inspect_20251222_201153.jpg,0,OK,0.8244713544845581,OK,[],,,,0,0,0,2025-12-22 19:11:53,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+154,20251222_201103,uploads\inspect_20251222_201103.jpg,0,OK,0.5961735844612122,OK,[],,,,0,0,0,2025-12-22 19:11:04,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+153,20251222_201007,uploads\inspect_20251222_201007.jpg,2,NOK - Hamer weg,0.8914861083030701,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 19:10:07,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+152,20251222_200947,uploads\inspect_20251222_200947.jpg,2,NOK - Hamer weg,0.8417251706123352,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 19:09:48,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+151,20251222_200658,uploads\inspect_20251222_200658.jpg,2,NOK - Hamer weg,0.6969107985496521,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 19:06:58,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+150,20251222_200442,uploads\inspect_20251222_200442.jpg,0,OK,0.7660887837409973,OK,[],,,,0,0,0,2025-12-22 19:04:42,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+149,20251222_200308,uploads\inspect_20251222_200308.jpg,2,NOK - Hamer weg,0.40586599707603455,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 19:03:08,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+148,20251222_200217,uploads\inspect_20251222_200217.jpg,2,NOK - Hamer weg,0.5872499346733093,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 19:02:17,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+147,20251222_200157,uploads\inspect_20251222_200157.jpg,2,NOK - Hamer weg,0.6969107985496521,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 19:01:57,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+146,20251222_200139,uploads\inspect_20251222_200139.jpg,0,OK,0.978161096572876,OK,[],,,,0,0,0,2025-12-22 19:01:39,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+145,20251222_195847,uploads\inspect_20251222_195847.jpg,7,NOK - Hamer en sleutel weg,0.9989423155784607,NOK,"[""hamer"", ""sleutel""]",,,,0,0,0,2025-12-22 18:58:47,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+144,20251222_195827,uploads\inspect_20251222_195827.jpg,2,NOK - Hamer weg,0.9406775832176208,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 18:58:27,2,,Linux - Chrome,0,0,0,0,classification
+143,20251222_195756,uploads\inspect_20251222_195756.jpg,4,NOK - Schaar en sleutel weg,0.5900555849075317,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-22 18:57:56,2,,Linux - Chrome,0,0,0,0,classification
+142,20251222_195732,uploads\inspect_20251222_195732.jpg,4,NOK - Schaar en sleutel weg,0.6456387639045715,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-22 18:57:32,2,,Linux - Chrome,0,0,0,0,classification
+141,20251222_195703,uploads\inspect_20251222_195703.jpg,2,NOK - Hamer weg,0.7063575387001038,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 18:57:03,2,,Linux - Chrome,0,0,0,0,classification
+140,20251222_195640,uploads\inspect_20251222_195640.jpg,7,NOK - Hamer en sleutel weg,0.9987494945526123,NOK,"[""hamer"", ""sleutel""]",,,,0,0,0,2025-12-22 18:56:40,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+139,20251222_195601,uploads\inspect_20251222_195601.jpg,7,NOK - Hamer en sleutel weg,0.9989423155784607,NOK,"[""hamer"", ""sleutel""]",,,,0,0,0,2025-12-22 18:56:01,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+138,20251222_195426,uploads\inspect_20251222_195426.jpg,2,NOK - Hamer weg,0.87,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 18:54:26,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+137,20251222_195403,uploads\inspect_20251222_195403.jpg,2,NOK - Hamer weg,0.87,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 18:54:03,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+136,20251222_195144,uploads\inspect_20251222_195144.jpg,2,NOK - Hamer weg,0.87,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 18:51:44,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+135,20251222_195007,uploads\inspect_20251222_195007.jpg,2,NOK - Hamer weg,0.87,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 18:50:07,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+134,20251222_194106,uploads\inspect_20251222_194106.jpg,2,NOK - Hamer weg,0.6839595437049866,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 18:41:06,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+133,20251222_193807,uploads\inspect_20251222_193807.jpg,2,NOK - Hamer weg,0.6839595437049866,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 18:38:07,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+132,20251222_193751,uploads\inspect_20251222_193751.jpg,2,NOK - Hamer weg,0.4288714826107025,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 18:37:51,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+131,20251222_193541,uploads\inspect_20251222_193541.jpg,2,NOK - Hamer weg,0.9204215407371521,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 18:35:41,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+130,20251222_193526,uploads\inspect_20251222_193526.jpg,2,NOK - Hamer weg,0.4288714826107025,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 18:35:26,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+129,20251222_193124,uploads\inspect_20251222_193124.jpg,2,NOK - Hamer weg,0.6962940096855164,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 18:31:24,2,,Linux - Chrome,0,0,0,0,classification
+128,20251222_193052,uploads\inspect_20251222_193052.jpg,2,NOK - Hamer weg,0.7990209460258484,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 18:30:52,2,,Linux - Chrome,0,0,0,0,classification
+127,20251222_192259,uploads\inspect_20251222_192259.jpg,2,NOK - Hamer weg,0.6839595437049866,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 18:22:59,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+126,20251222_192232,uploads\inspect_20251222_192232.jpg,2,NOK - Hamer weg,0.8894410133361816,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 18:22:32,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+125,20251222_192123,uploads\inspect_20251222_192123.jpg,5,NOK - Sleutel weg,0.5539896488189697,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 18:21:23,2,,Linux - Chrome,0,0,0,0,classification
+124,20251222_192040,uploads\inspect_20251222_192040.jpg,2,NOK - Hamer weg,0.6826047301292419,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 18:20:40,2,,Linux - Chrome,0,0,0,0,classification
+123,20251222_192016,uploads\inspect_20251222_192016.jpg,5,NOK - Sleutel weg,0.9547192454338074,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 18:20:17,2,,Linux - Chrome,0,0,0,0,classification
+122,20251222_192000,uploads\inspect_20251222_192000.jpg,5,NOK - Sleutel weg,0.9783340692520142,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 18:20:00,2,,Linux - Chrome,0,0,0,0,classification
+121,20251222_191939,uploads\inspect_20251222_191939.jpg,5,NOK - Sleutel weg,0.8943464159965515,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 18:19:39,2,,Linux - Chrome,0,0,0,0,classification
+120,20251222_191917,uploads\inspect_20251222_191917.jpg,4,NOK - Schaar en sleutel weg,0.7497664093971252,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-22 18:19:17,2,,Linux - Chrome,0,0,0,0,classification
+119,20251222_191854,uploads\inspect_20251222_191854.jpg,4,NOK - Schaar en sleutel weg,0.6196064949035645,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-22 18:18:54,2,,Linux - Chrome,0,0,0,0,classification
+118,20251222_191830,uploads\inspect_20251222_191830.jpg,4,NOK - Schaar en sleutel weg,0.5646251440048218,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-22 18:18:30,2,,Linux - Chrome,0,0,0,0,classification
+117,20251222_191812,uploads\inspect_20251222_191812.jpg,4,NOK - Schaar en sleutel weg,0.9223492741584778,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-22 18:18:12,2,,Linux - Chrome,0,0,0,0,classification
+116,20251222_191745,uploads\inspect_20251222_191745.jpg,5,NOK - Sleutel weg,0.8163014054298401,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 18:17:45,2,,Linux - Chrome,0,0,0,0,classification
+115,20251222_191718,uploads\inspect_20251222_191718.jpg,4,NOK - Schaar en sleutel weg,0.5637778639793396,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-22 18:17:18,2,,Linux - Chrome,0,0,0,0,classification
+114,20251222_191654,uploads\inspect_20251222_191654.jpg,5,NOK - Sleutel weg,0.5178574323654175,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 18:16:54,2,,Linux - Chrome,0,0,0,0,classification
+113,20251222_191603,uploads\inspect_20251222_191603.jpg,4,NOK - Schaar en sleutel weg,0.9680646061897278,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-22 18:16:03,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+112,20251222_191522,uploads\inspect_20251222_191522.jpg,2,NOK - Hamer weg,0.8317356705665588,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 18:15:22,2,,Linux - Chrome,0,0,0,0,classification
+111,20251222_191501,uploads\inspect_20251222_191501.jpg,5,NOK - Sleutel weg,0.49291351437568665,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 18:15:01,2,,Linux - Chrome,0,0,0,0,classification
+110,20251222_191430,uploads\inspect_20251222_191430.jpg,2,NOK - Hamer weg,0.8354266285896301,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 18:14:30,2,,Linux - Chrome,0,0,0,0,classification
+109,20251222_191350,uploads\inspect_20251222_191350.jpg,2,NOK - Hamer weg,0.9984670281410217,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 18:13:50,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+108,20251222_172317,uploads\inspect_20251222_172317.jpg,2,NOK - Hamer weg,0.4995364546775818,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 16:23:17,2,,Linux - Chrome,0,0,0,0,classification
+107,20251222_172301,uploads\inspect_20251222_172301.jpg,0,OK,0.6162379384040833,OK,[],,,,0,0,0,2025-12-22 16:23:01,2,,Linux - Chrome,0,0,0,0,classification
+106,20251222_172239,uploads\inspect_20251222_172239.jpg,5,NOK - Sleutel weg,0.9020842909812927,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 16:22:39,2,,Linux - Chrome,0,0,0,0,classification
+105,20251222_172221,uploads\inspect_20251222_172221.jpg,5,NOK - Sleutel weg,0.9081964492797852,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 16:22:21,2,,Linux - Chrome,0,0,0,0,classification
+104,20251222_172203,uploads\inspect_20251222_172203.jpg,0,OK,0.5644299387931824,OK,[],,,,0,0,0,2025-12-22 16:22:03,2,,Linux - Chrome,0,0,0,0,classification
+103,20251222_172137,uploads\inspect_20251222_172137.jpg,2,NOK - Hamer weg,0.8206586837768555,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 16:21:37,2,,Linux - Chrome,0,0,0,0,classification
+102,20251222_172120,uploads\inspect_20251222_172120.jpg,2,NOK - Hamer weg,0.8219856023788452,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 16:21:20,2,,Linux - Chrome,0,0,0,0,classification
+101,20251222_172015,uploads\inspect_20251222_172015.jpg,2,NOK - Hamer weg,0.5020254254341125,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 16:20:15,2,,Linux - Chrome,0,0,0,0,classification
+100,20251222_171939,uploads\inspect_20251222_171939.jpg,2,NOK - Hamer weg,0.6113125681877136,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 16:19:39,2,,Linux - Chrome,0,0,0,0,classification
+99,20251222_171911,uploads\inspect_20251222_171911.jpg,2,NOK - Hamer weg,0.669923722743988,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 16:19:11,2,,Linux - Chrome,0,0,0,0,classification
+98,20251222_171854,uploads\inspect_20251222_171854.jpg,5,NOK - Sleutel weg,0.605937659740448,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 16:18:54,2,,Linux - Chrome,0,0,0,0,classification
+97,20251222_171829,uploads\inspect_20251222_171829.jpg,2,NOK - Hamer weg,0.8029052019119263,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 16:18:29,2,,Linux - Chrome,0,0,0,0,classification
+96,20251222_171316,uploads\inspect_20251222_171316.jpg,2,NOK - Hamer weg,0.6425825357437134,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 16:13:16,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+95,20251222_171238,uploads\inspect_20251222_171238.jpg,2,NOK - Hamer weg,0.9509341716766357,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 16:12:38,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+94,20251222_171215,uploads\inspect_20251222_171215.jpg,5,NOK - Sleutel weg,0.5566326379776001,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 16:12:15,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+93,20251222_171157,uploads\inspect_20251222_171157.jpg,0,OK,0.6216676235198975,OK,[],,,,0,0,0,2025-12-22 16:11:57,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+92,20251222_171114,uploads\inspect_20251222_171114.jpg,0,OK,0.7971305847167969,OK,[],,,,0,0,0,2025-12-22 16:11:14,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+91,20251222_171055,uploads\inspect_20251222_171055.jpg,5,NOK - Sleutel weg,0.4800799489021301,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 16:10:55,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+90,20251222_171031,uploads\inspect_20251222_171031.jpg,0,OK,0.534924328327179,OK,[],,,,0,0,0,2025-12-22 16:10:31,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+89,20251222_171010,uploads\inspect_20251222_171010.jpg,5,NOK - Sleutel weg,0.8358346819877625,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 16:10:10,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+88,20251222_170240,uploads\inspect_20251222_170240.jpg,5,NOK - Sleutel weg,0.914023220539093,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 16:02:40,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+87,20251222_170218,uploads\inspect_20251222_170218.jpg,0,OK,0.4865444302558899,OK,[],,,,0,0,0,2025-12-22 16:02:18,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+86,20251222_170200,uploads\inspect_20251222_170200.jpg,5,NOK - Sleutel weg,0.5201513171195984,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 16:02:00,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+85,20251222_170138,uploads\inspect_20251222_170138.jpg,2,NOK - Hamer weg,0.9136025309562683,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 16:01:38,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+84,20251222_170112,uploads\inspect_20251222_170112.jpg,2,NOK - Hamer weg,0.5252575278282166,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 16:01:12,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+83,20251222_170052,uploads\inspect_20251222_170052.jpg,3,NOK - Schaar weg,0.2681291997432709,NOK,"[""schaar""]",,,,0,0,0,2025-12-22 16:00:52,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+82,20251222_170028,uploads\inspect_20251222_170028.jpg,6,NOK - Alleen sleutel,0.8069589734077454,NOK,"[""hamer"", ""schaar""]",,,,0,0,0,2025-12-22 16:00:28,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+81,20251222_165941,uploads\inspect_20251222_165941.jpg,2,NOK - Hamer weg,0.9976212382316589,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 15:59:41,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+80,20251222_165923,uploads\inspect_20251222_165923.jpg,2,NOK - Hamer weg,0.9994039535522461,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 15:59:23,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+79,20251222_165849,uploads\inspect_20251222_165849.jpg,1,NOK - Alles weg,0.9809544086456299,NOK,"[""hamer"", ""schaar"", ""sleutel""]",,,,0,0,0,2025-12-22 15:58:49,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+78,20251222_165822,uploads\inspect_20251222_165822.jpg,1,NOK - Alles weg,0.9084358215332031,NOK,"[""hamer"", ""schaar"", ""sleutel""]",,,,0,0,0,2025-12-22 15:58:22,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+77,20251222_165750,uploads\inspect_20251222_165750.jpg,0,OK,0.9992316961288452,OK,[],,,,0,0,0,2025-12-22 15:57:50,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+76,20251222_165710,uploads\inspect_20251222_165710.jpg,2,NOK - Hamer weg,0.3105403482913971,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 15:57:10,2,,Linux - Chrome,0,0,0,0,classification
+75,20251222_165624,uploads\inspect_20251222_165624.jpg,2,NOK - Hamer weg,0.8777116537094116,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 15:56:24,2,,Linux - Chrome,0,0,0,0,classification
+74,20251222_165454,uploads\inspect_20251222_165454.jpg,2,NOK - Hamer weg,0.8611891269683838,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 15:54:55,2,,Linux - Chrome,0,0,0,0,classification
+73,20251222_165427,uploads\inspect_20251222_165427.jpg,5,NOK - Sleutel weg,0.6502164602279663,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 15:54:27,2,,Linux - Chrome,0,0,0,0,classification
+72,20251222_165355,uploads\inspect_20251222_165355.jpg,2,NOK - Hamer weg,0.9499305486679077,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 15:53:55,2,,Linux - Chrome,0,0,0,0,classification
+71,20251222_165326,uploads\inspect_20251222_165326.jpg,5,NOK - Sleutel weg,0.6213132739067078,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 15:53:26,2,,Linux - Chrome,0,0,0,0,classification
+70,20251222_165258,uploads\inspect_20251222_165258.jpg,2,NOK - Hamer weg,0.787346363067627,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 15:52:58,2,,Linux - Chrome,0,0,0,0,classification
+69,20251222_165234,uploads\inspect_20251222_165234.jpg,5,NOK - Sleutel weg,0.6086317300796509,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 15:52:34,2,,Linux - Chrome,0,0,0,0,classification
+68,20251222_165142,uploads\inspect_20251222_165142.jpg,2,NOK - Hamer weg,0.9867205619812012,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 15:51:42,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+67,20251222_165128,uploads\inspect_20251222_165128.jpg,2,NOK - Hamer weg,0.9984670281410217,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 15:51:28,2,,Windows - 10/11 - Firefox,0,0,0,0,classification
+66,20251222_130243,uploads\inspect_20251222_130243.jpg,2,NOK - Hamer weg,0.8799768090248108,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 12:02:43,2,,Linux - Chrome,0,0,0,0,classification
+65,20251222_130148,uploads\inspect_20251222_130148.jpg,2,NOK - Hamer weg,0.7874880433082581,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 12:01:48,2,,Linux - Chrome,0,0,0,0,classification
+64,20251222_130113,uploads\inspect_20251222_130113.jpg,2,NOK - Hamer weg,0.9453030824661255,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 12:01:14,2,,Linux - Chrome,0,0,0,0,classification
+63,20251222_125955,uploads\inspect_20251222_125955.jpg,2,NOK - Hamer weg,0.9779772758483887,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 11:59:56,2,,Linux - Chrome,0,0,0,0,classification
+62,20251222_125842,uploads\inspect_20251222_125842.jpg,5,NOK - Sleutel weg,0.6691539287567139,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 11:58:42,2,,Linux - Chrome,0,0,0,0,classification
+61,20251222_125719,uploads\inspect_20251222_125719.jpg,5,NOK - Sleutel weg,0.5039422512054443,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 11:57:19,2,,Linux - Chrome,0,0,0,0,classification
+60,20251222_125604,uploads\inspect_20251222_125604.jpg,5,NOK - Sleutel weg,0.8214571475982666,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 11:56:04,2,,Linux - Chrome,0,0,0,0,classification
+59,20251222_125528,uploads\inspect_20251222_125528.jpg,2,NOK - Hamer weg,0.7514824271202087,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 11:55:29,2,,Linux - Chrome,0,0,0,0,classification
+58,20251222_125434,uploads\inspect_20251222_125434.jpg,5,NOK - Sleutel weg,0.7753583192825317,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 11:54:34,2,,Linux - Chrome,0,0,0,0,classification
+57,20251222_125400,uploads\inspect_20251222_125400.jpg,2,NOK - Hamer weg,0.9578930139541626,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 11:54:01,2,,Linux - Chrome,0,0,0,0,classification
+56,20251222_125317,uploads\inspect_20251222_125317.jpg,4,NOK - Schaar en sleutel weg,0.33077192306518555,NOK,"[""schaar"", ""sleutel""]",,,,0,0,0,2025-12-22 11:53:17,2,,Linux - Chrome,0,0,0,0,classification
+55,20251222_125221,uploads\inspect_20251222_125221.jpg,5,NOK - Sleutel weg,0.8070821762084961,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 11:52:21,2,,Linux - Chrome,0,0,0,0,classification
+54,20251222_125155,uploads\inspect_20251222_125155.jpg,5,NOK - Sleutel weg,0.5995159149169922,NOK,"[""sleutel""]",,,,0,0,0,2025-12-22 11:51:55,2,,Linux - Chrome,0,0,0,0,classification
+53,20251222_125126,uploads\inspect_20251222_125126.jpg,2,NOK - Hamer weg,0.9762755632400513,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 11:51:26,2,,Linux - Chrome,0,0,0,0,classification
+52,20251222_125039,uploads\inspect_20251222_125039.jpg,2,NOK - Hamer weg,0.7063143253326416,NOK,"[""hamer""]",,,,0,0,0,2025-12-22 11:50:39,2,,Linux - Chrome,0,0,0,0,classification
+51,20251222_123720,uploads\inspect_20251222_123720.jpg,3,NOK - Schaar weg,0.48831459879875183,NOK,"[""schaar""]",3,NOK - Schaar weg,,0,1,1,2025-12-22 11:37:20,2,,Linux - Chrome,0,0,0,0,classification
+50,20251222_123649,uploads\inspect_20251222_123649.jpg,2,NOK - Hamer weg,0.5874924063682556,NOK,"[""hamer""]",0,OK,,0,1,1,2025-12-22 11:36:50,2,,Linux - Chrome,0,0,0,0,classification
+49,20251222_123618,uploads\inspect_20251222_123618.jpg,5,NOK - Sleutel weg,0.9769768118858337,NOK,"[""sleutel""]",0,OK,,0,1,1,2025-12-22 11:36:18,2,,Linux - Chrome,0,0,0,0,classification
+48,20251222_123447,uploads\inspect_20251222_123447.jpg,5,NOK - Sleutel weg,0.7142418622970581,NOK,"[""sleutel""]",0,OK,,0,1,1,2025-12-22 11:34:47,2,,Linux - Chrome,0,0,0,0,classification
+47,20251222_123327,uploads\inspect_20251222_123327.jpg,2,NOK - Hamer weg,0.6573697924613953,NOK,"[""hamer""]",3,NOK-schaar_weg,,0,1,1,2025-12-22 11:33:27,2,,Linux - Chrome,0,0,0,0,classification
+46,20251222_123232,uploads\inspect_20251222_123232.jpg,2,NOK - Hamer weg,0.6963881850242615,NOK,"[""hamer""]",1,NOK-alles_weg,,0,1,1,2025-12-22 11:32:32,2,,Linux - Chrome,0,0,0,0,classification
+45,20251222_123144,uploads\inspect_20251222_123144.jpg,5,NOK - Sleutel weg,0.9661380648612976,NOK,"[""sleutel""]",0,OK,,0,1,1,2025-12-22 11:31:45,2,,Linux - Chrome,0,0,0,0,classification
+44,20251222_123048,uploads\inspect_20251222_123048.jpg,5,NOK - Sleutel weg,0.7883176803588867,NOK,"[""sleutel""]",5,NOK - Sleutel weg,,0,0,0,2025-12-22 11:30:48,2,,Linux - Chrome,0,0,0,0,classification
+43,20251222_122953,uploads\inspect_20251222_122953.jpg,2,NOK - Hamer weg,0.42987266182899475,NOK,"[""hamer""]",3,NOK-schaar_weg,,0,1,1,2025-12-22 11:29:54,2,,Linux - Chrome,0,0,0,0,classification
+42,20251222_122901,uploads\inspect_20251222_122901.jpg,2,NOK - Hamer weg,0.5400232076644897,NOK,"[""hamer""]",2,NOK - Hamer weg,,0,1,1,2025-12-22 11:29:02,2,,Linux - Chrome,0,0,0,0,classification
+41,20251222_122809,uploads\inspect_20251222_122809.jpg,5,NOK - Sleutel weg,0.9414693713188171,NOK,"[""sleutel""]",5,NOK - Sleutel weg,,0,0,0,2025-12-22 11:28:10,2,,Linux - Chrome,0,0,0,0,classification
+40,20251222_122712,uploads\inspect_20251222_122712.jpg,5,NOK - Sleutel weg,0.9364273548126221,NOK,"[""sleutel""]",5,NOK - Sleutel weg,,0,0,0,2025-12-22 11:27:12,2,,Linux - Chrome,0,0,0,0,classification
+39,20251222_122604,uploads\inspect_20251222_122604.jpg,3,NOK - Schaar weg,0.8759861588478088,NOK,"[""schaar""]",3,NOK - Schaar weg,,0,0,0,2025-12-22 11:26:04,2,,Linux - Chrome,0,0,0,0,classification
+38,20251222_122442,uploads\inspect_20251222_122442.jpg,2,NOK - Hamer weg,0.7914098501205444,NOK,"[""hamer""]",4,NOK-schaar_sleutel_weg,,0,1,1,2025-12-22 11:24:42,2,,Linux - Chrome,0,0,0,0,classification
+37,20251222_122313,uploads\inspect_20251222_122313.jpg,5,NOK - Sleutel weg,0.49925604462623596,NOK,"[""sleutel""]",4,NOK-schaar_sleutel_weg,,0,1,1,2025-12-22 11:23:13,2,,Linux - Chrome,0,0,0,0,classification
+36,20251222_122213,uploads\inspect_20251222_122213.jpg,3,NOK - Schaar weg,0.7320336103439331,NOK,"[""schaar""]",3,NOK - Schaar weg,,0,0,0,2025-12-22 11:22:13,2,,Linux - Chrome,0,0,0,0,classification
+35,20251222_122119,uploads\inspect_20251222_122119.jpg,3,NOK - Schaar weg,0.5790555477142334,NOK,"[""schaar""]",2,NOK-hamer_weg,,0,1,1,2025-12-22 11:21:19,2,,Linux - Chrome,0,0,0,0,classification
+34,20251222_122018,uploads\inspect_20251222_122018.jpg,5,NOK - Sleutel weg,0.4873800575733185,NOK,"[""sleutel""]",0,OK,,0,1,1,2025-12-22 11:20:18,2,,Linux - Chrome,0,0,0,0,classification
+33,20251222_121907,uploads\inspect_20251222_121907.jpg,0,OK,0.5874261260032654,OK,[],0,OK,,0,1,1,2025-12-22 11:19:07,2,,Linux - Chrome,0,0,0,0,classification
+32,20251222_121808,uploads\inspect_20251222_121808.jpg,0,OK,0.9637466669082642,OK,[],0,OK,,0,0,0,2025-12-22 11:18:09,2,,Linux - Chrome,0,0,0,0,classification
+31,20251222_121735,uploads\inspect_20251222_121735.jpg,0,OK,0.9624115228652954,OK,[],0,OK,,0,0,0,2025-12-22 11:17:35,2,,Linux - Chrome,0,0,0,0,classification
+30,20251222_121638,uploads\inspect_20251222_121638.jpg,2,NOK - Hamer weg,0.7274350523948669,NOK,"[""hamer""]",0,OK,,0,1,1,2025-12-22 11:16:38,2,,Linux - Chrome,0,0,0,0,classification
+29,20251221_211907,uploads\inspect_20251221_211907.jpg,5,NOK - Sleutel weg,0.91970294713974,NOK,"[""sleutel""]",5,NOK - Sleutel weg,,0,0,0,2025-12-21 20:19:07,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+28,20251221_211837,uploads\inspect_20251221_211837.jpg,5,NOK - Sleutel weg,0.5906552672386169,NOK,"[""sleutel""]",5,NOK - Sleutel weg,,0,1,1,2025-12-21 20:18:38,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+27,20251221_211817,uploads\inspect_20251221_211817.jpg,2,NOK - Hamer weg,0.5533286333084106,NOK,"[""hamer""]",2,NOK - Hamer weg,,0,1,1,2025-12-21 20:18:17,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+26,20251221_211740,uploads\inspect_20251221_211740.jpg,2,NOK - Hamer weg,0.7517350912094116,NOK,"[""hamer""]",0,OK,,0,1,1,2025-12-21 20:17:40,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+25,20251221_211653,uploads\inspect_20251221_211653.jpg,0,OK,0.4631165564060211,OK,[],0,OK,,0,1,1,2025-12-21 20:16:53,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+24,20251221_211631,uploads\inspect_20251221_211631.jpg,2,NOK - Hamer weg,0.7648468613624573,NOK,"[""hamer""]",0,OK,,0,1,1,2025-12-21 20:16:32,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+23,20251221_211614,uploads\inspect_20251221_211614.jpg,5,NOK - Sleutel weg,0.6541560888290405,NOK,"[""sleutel""]",2,NOK-hamer_weg,,0,1,1,2025-12-21 20:16:15,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+22,20251221_211554,uploads\inspect_20251221_211554.jpg,2,NOK - Hamer weg,0.6427659392356873,NOK,"[""hamer""]",2,NOK - Hamer weg,,0,1,1,2025-12-21 20:15:55,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+21,20251221_211527,uploads\inspect_20251221_211527.jpg,2,NOK - Hamer weg,0.9819924831390381,NOK,"[""hamer""]",2,NOK - Hamer weg,,0,0,0,2025-12-21 20:15:27,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+20,20251221_211456,uploads\inspect_20251221_211456.jpg,6,NOK - Alleen sleutel,0.7055461406707764,NOK,"[""hamer"", ""schaar""]",6,NOK - Alleen sleutel,,0,0,0,2025-12-21 20:14:56,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+19,20251221_211424,uploads\inspect_20251221_211424.jpg,0,OK,0.756101131439209,OK,[],0,OK,,0,0,0,2025-12-21 20:14:24,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+18,20251221_211405,uploads\inspect_20251221_211405.jpg,3,NOK - Schaar weg,0.6783972978591919,NOK,"[""schaar""]",0,OK,,0,1,1,2025-12-21 20:14:05,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+17,20251221_211343,uploads\inspect_20251221_211343.jpg,2,NOK - Hamer weg,0.3465953469276428,NOK,"[""hamer""]",0,OK,,0,1,1,2025-12-21 20:13:43,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+16,20251221_211312,uploads\inspect_20251221_211312.jpg,3,NOK - Schaar weg,0.5010046362876892,NOK,"[""schaar""]",3,NOK - Schaar weg,,0,1,1,2025-12-21 20:13:12,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+15,20251221_211251,uploads\inspect_20251221_211251.jpg,4,NOK - Schaar en sleutel weg,0.4537676274776459,NOK,"[""schaar"", ""sleutel""]",3,NOK-schaar_weg,,0,1,1,2025-12-21 20:12:51,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+14,20251221_211220,uploads\inspect_20251221_211220.jpg,3,NOK - Schaar weg,0.7281537055969238,NOK,"[""schaar""]",3,NOK - Schaar weg,,0,0,0,2025-12-21 20:12:20,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+13,20251221_211152,uploads\inspect_20251221_211152.jpg,4,NOK - Schaar en sleutel weg,0.6222787499427795,NOK,"[""schaar"", ""sleutel""]",3,NOK-schaar_weg,,0,1,1,2025-12-21 20:11:52,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+12,20251221_211115,uploads\inspect_20251221_211115.jpg,0,OK,0.9184061884880066,OK,[],3,NOK-schaar_weg,,0,1,1,2025-12-21 20:11:15,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+11,20251218_212921,uploads\inspect_20251218_212921.jpg,3,NOK - Schaar weg,0.6410304307937622,NOK,"[""schaar""]",3,NOK - Schaar weg,,0,1,1,2025-12-18 20:29:21,2,,Linux - Chrome,0,0,0,0,classification
+10,20251218_212855,uploads\inspect_20251218_212855.jpg,3,NOK - Schaar weg,0.8648759126663208,NOK,"[""schaar""]",3,NOK - Schaar weg,,0,0,0,2025-12-18 20:28:55,2,,Linux - Chrome,0,0,0,0,classification
+9,20251218_212823,uploads\inspect_20251218_212823.jpg,4,NOK - Schaar en sleutel weg,0.33655908703804016,NOK,"[""schaar"", ""sleutel""]",3,NOK-schaar_weg,,0,1,1,2025-12-18 20:28:23,2,,Linux - Chrome,0,0,0,0,classification
+8,20251218_212712,uploads\inspect_20251218_212712.jpg,4,NOK - Schaar en sleutel weg,0.6208047866821289,NOK,"[""schaar"", ""sleutel""]",3,NOK-schaar_weg,,0,1,1,2025-12-18 20:27:12,2,,Linux - Chrome,0,0,0,0,classification
+7,20251218_212640,uploads\inspect_20251218_212640.jpg,0,OK,0.44059157371520996,OK,[],3,NOK-schaar_weg,,0,1,1,2025-12-18 20:26:40,2,,Linux - Chrome,0,0,0,0,classification
+6,20251218_212613,uploads\inspect_20251218_212613.jpg,3,NOK - Schaar weg,0.8381346464157104,NOK,"[""schaar""]",3,NOK - Schaar weg,,0,0,0,2025-12-18 20:26:13,2,,Linux - Chrome,0,0,0,0,classification
+5,20251218_212541,uploads\inspect_20251218_212541.jpg,3,NOK - Schaar weg,0.7902392148971558,NOK,"[""schaar""]",3,NOK - Schaar weg,,0,0,0,2025-12-18 20:25:41,2,,Linux - Chrome,0,0,0,0,classification
+4,20251218_212415,uploads\inspect_20251218_212415.jpg,3,NOK - Schaar weg,0.9067899584770203,NOK,"[""schaar""]",3,NOK - Schaar weg,,0,0,0,2025-12-18 20:24:15,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+3,20251218_212333,uploads\inspect_20251218_212333.jpg,0,OK,0.6997406482696533,OK,[],3,NOK-schaar_weg,,0,1,1,2025-12-18 20:23:33,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+2,20251218_212247,uploads\inspect_20251218_212247.jpg,3,NOK - Schaar weg,0.4691266715526581,NOK,"[""schaar""]",3,NOK - Schaar weg,,0,1,1,2025-12-18 20:22:48,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification
+1,20251218_212100,uploads\inspect_20251218_212100.jpg,4,NOK - Schaar en sleutel weg,0.4796268343925476,NOK,"[""schaar"", ""sleutel""]",3,NOK-schaar_weg,,0,1,1,2025-12-18 20:21:00,2,,iPhone - iOS 18.7 - Safari,0,0,0,0,classification

@@ -5,7 +5,6 @@
 }
 
 .admin-header {
-  text-align: center;
   margin-bottom: 30px;
   padding: 20px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -13,14 +12,41 @@
   color: white;
 }
 
+.admin-header .header-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 10px;
+}
+
+.back-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+  backdrop-filter: blur(10px);
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateX(-3px);
+}
+
 .admin-header h1 {
-  margin: 0 0 10px 0;
+  margin: 0;
   font-size: 2.5em;
 }
 
 .admin-header p {
   margin: 0;
   opacity: 0.9;
+  text-align: center;
 }
 
 /* Tabs */
@@ -28,29 +54,32 @@
   display: flex;
   gap: 10px;
   margin-bottom: 30px;
-  border-bottom: 2px solid #e0e0e0;
 }
 
 .tab {
-  padding: 15px 30px;
-  background: none;
+  padding: 12px 25px;
+  background: #667eea;
   border: none;
-  border-bottom: 3px solid transparent;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 1.1em;
-  color: #666;
+  font-size: 1em;
+  color: white;
+  font-weight: 500;
   transition: all 0.3s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .tab:hover {
-  color: #667eea;
-  background: rgba(102, 126, 234, 0.1);
+  background: #5568d3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
 }
 
 .tab.active {
-  color: #667eea;
-  border-bottom-color: #667eea;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
   font-weight: 600;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 /* Tab Content */
@@ -1283,4 +1312,239 @@
 .scenario-progress-fill {
   height: 100%;
   transition: width 0.5s ease, background-color 0.3s;
+}
+
+/* ========================================
+   MODEL SETTINGS TAB
+   ======================================== */
+
+.settings-tab {
+  padding: 20px;
+}
+
+.settings-tab h2 {
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.settings-tab > p {
+  color: #666;
+  margin-bottom: 30px;
+}
+
+.model-type-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+.model-option {
+  padding: 25px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  background: white;
+  transition: all 0.3s;
+}
+
+.model-option.active {
+  border-color: #667eea;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.model-option h3 {
+  color: #333;
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.5em;
+}
+
+.model-option > p {
+  color: #666;
+  margin-bottom: 15px;
+}
+
+.model-option ul {
+  list-style: none;
+  padding: 0;
+  margin: 15px 0 20px 0;
+}
+
+.model-option ul li {
+  padding: 8px 0;
+  color: #555;
+  position: relative;
+  padding-left: 25px;
+}
+
+.model-option ul li:before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #667eea;
+  font-weight: bold;
+}
+
+.model-option.active ul li:before {
+  color: #28a745;
+}
+
+.model-option button {
+  width: 100%;
+  padding: 12px;
+  font-size: 1em;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.model-option button.btn-primary {
+  background: #667eea;
+  color: white;
+}
+
+.model-option button.btn-primary:hover:not(:disabled) {
+  background: #5568d3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.model-option button.btn-success {
+  background: #28a745;
+  color: white;
+  cursor: default;
+}
+
+.model-option button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.model-info {
+  padding: 25px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+}
+
+.model-info h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.model-info table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.model-info table th {
+  text-align: left;
+  padding: 12px;
+  background: white;
+  color: #666;
+  font-weight: 600;
+  width: 30%;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.model-info table td {
+  padding: 12px;
+  background: white;
+  color: #333;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.model-info table td code {
+  background: #f4f4f4;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.9em;
+  color: #667eea;
+}
+
+/* Detection Counts Styling */
+.meta-item.detection-counts {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+  padding: 8px 12px;
+  border-radius: 6px;
+  border-left: 3px solid #667eea;
+}
+
+.meta-item.detection-counts .meta-value {
+  font-family: monospace;
+  font-size: 0.95em;
+  font-weight: 600;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* Toast Notificaties */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 300px;
+  max-width: 500px;
+  animation: slideInRight 0.3s ease-out;
+  pointer-events: auto;
+  font-weight: 500;
+}
+
+.toast-success {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: white;
+  border-left: 4px solid #15803d;
+}
+
+.toast-error {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border-left: 4px solid #b91c1c;
+}
+
+.toast-info {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border-left: 4px solid #1d4ed8;
+}
+
+.toast-icon {
+  font-size: 1.5em;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.toast-message {
+  flex: 1;
+  line-height: 1.4;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }

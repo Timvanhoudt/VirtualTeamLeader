@@ -77,6 +77,7 @@ def init_database():
             workplace_id INTEGER NOT NULL,
             version TEXT NOT NULL,
             model_path TEXT NOT NULL,
+            model_type TEXT DEFAULT 'classification',
             uploaded_at TEXT DEFAULT CURRENT_TIMESTAMP,
             uploaded_by TEXT DEFAULT 'admin',
             status TEXT DEFAULT 'uploaded',
@@ -138,6 +139,116 @@ def init_database():
         cursor.execute("ALTER TABLE analyses ADD COLUMN model_version TEXT")
         conn.commit()
 
+    # Nieuwe kolommen voor object detection counts
+    try:
+        cursor.execute("SELECT detected_hamer FROM analyses LIMIT 1")
+    except sqlite3.OperationalError:
+        print("Migratie: detection counts kolommen toevoegen...")
+        cursor.execute("ALTER TABLE analyses ADD COLUMN detected_hamer INTEGER DEFAULT 0")
+        cursor.execute("ALTER TABLE analyses ADD COLUMN detected_schaar INTEGER DEFAULT 0")
+        cursor.execute("ALTER TABLE analyses ADD COLUMN detected_sleutel INTEGER DEFAULT 0")
+        cursor.execute("ALTER TABLE analyses ADD COLUMN total_detections INTEGER DEFAULT 0")
+        cursor.execute("ALTER TABLE analyses ADD COLUMN model_type TEXT DEFAULT 'classification'")
+        conn.commit()
+
+    # Werkplek model configuratie kolommen
+    try:
+        cursor.execute("SELECT active_model_type FROM workplaces LIMIT 1")
+    except sqlite3.OperationalError:
+        print("Migratie: werkplek model configuratie kolommen toevoegen...")
+        cursor.execute("ALTER TABLE workplaces ADD COLUMN active_model_type TEXT DEFAULT 'classification'")
+        cursor.execute("ALTER TABLE workplaces ADD COLUMN active_model_path TEXT")
+        conn.commit()
+
+    # Migratie: model_type kolom in models tabel
+    try:
+        cursor.execute("SELECT model_type FROM models LIMIT 1")
+    except sqlite3.OperationalError:
+        print("Migratie: model_type kolom toevoegen aan models tabel...")
+        cursor.execute("ALTER TABLE models ADD COLUMN model_type TEXT DEFAULT 'classification'")
+        conn.commit()
+
+    # Migratie: confidence_threshold kolom in workplaces tabel
+    try:
+        cursor.execute("SELECT confidence_threshold FROM workplaces LIMIT 1")
+    except sqlite3.OperationalError:
+        print("Migratie: confidence_threshold kolom toevoegen aan workplaces tabel...")
+        cursor.execute("ALTER TABLE workplaces ADD COLUMN confidence_threshold REAL DEFAULT 0.25")
+        conn.commit()
+
+    # Migratie: whiteboard_region kolom in workplaces tabel (JSON met {x1, y1, x2, y2} percentages)
+    try:
+        cursor.execute("SELECT whiteboard_region FROM workplaces LIMIT 1")
+    except sqlite3.OperationalError:
+        print("Migratie: whiteboard_region kolom toevoegen aan workplaces tabel...")
+        cursor.execute("ALTER TABLE workplaces ADD COLUMN whiteboard_region TEXT")
+        conn.commit()
+
+    # Migratie: image_path mag NULL zijn (voor verwijderde OK foto's)
+    # SQLite ondersteunt geen ALTER COLUMN, dus we moeten tabel opnieuw maken
+    try:
+        # Check of NOT NULL constraint nog bestaat
+        cursor.execute("PRAGMA table_info(analyses)")
+        columns = cursor.fetchall()
+        image_path_col = next((col for col in columns if col[1] == 'image_path'), None)
+
+        # col[3] is notnull flag (1 = NOT NULL, 0 = NULL allowed)
+        if image_path_col and image_path_col[3] == 1:
+            print("Migratie: image_path NOT NULL constraint verwijderen...")
+
+            # Stap 1: Maak nieuwe tabel zonder NOT NULL op image_path
+            cursor.execute("""
+                CREATE TABLE analyses_new (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT NOT NULL,
+                    image_path TEXT,
+                    predicted_class TEXT NOT NULL,
+                    predicted_label TEXT NOT NULL,
+                    confidence REAL NOT NULL,
+                    status TEXT NOT NULL,
+                    missing_items TEXT,
+                    corrected_class TEXT,
+                    corrected_label TEXT,
+                    notes TEXT,
+                    face_count INTEGER DEFAULT 0,
+                    training_candidate BOOLEAN DEFAULT 0,
+                    exported_for_training BOOLEAN DEFAULT 0,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                    workplace_id INTEGER,
+                    model_version TEXT,
+                    device_id TEXT DEFAULT 'onbekend',
+                    detected_hamer INTEGER DEFAULT 0,
+                    detected_schaar INTEGER DEFAULT 0,
+                    detected_sleutel INTEGER DEFAULT 0,
+                    total_detections INTEGER DEFAULT 0,
+                    model_type TEXT DEFAULT 'classification'
+                )
+            """)
+
+            # Stap 2: Kopieer alle data
+            cursor.execute("""
+                INSERT INTO analyses_new
+                SELECT * FROM analyses
+            """)
+
+            # Stap 3: Verwijder oude tabel en hernoem nieuwe
+            cursor.execute("DROP TABLE analyses")
+            cursor.execute("ALTER TABLE analyses_new RENAME TO analyses")
+
+            conn.commit()
+            print("✅ Migratie voltooid: image_path mag nu NULL zijn")
+    except Exception as e:
+        print(f"⚠️ Migratie waarschuwing: {e}")
+        conn.rollback()
+
+    # Migratie: model_version kolom in training_images tabel
+    try:
+        cursor.execute("SELECT model_version FROM training_images LIMIT 1")
+    except sqlite3.OperationalError:
+        print("Migratie: model_version kolom toevoegen aan training_images tabel...")
+        cursor.execute("ALTER TABLE training_images ADD COLUMN model_version TEXT")
+        conn.commit()
+
     conn.commit()
     conn.close()
     print("OK Database geinitaliseerd met alle tabellen")
@@ -159,8 +270,9 @@ def save_analysis(data):
     cursor.execute("""
         INSERT INTO analyses
         (timestamp, image_path, predicted_class, predicted_label,
-         confidence, status, missing_items, face_count, device_id, workplace_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         confidence, status, missing_items, face_count, device_id, workplace_id,
+         detected_hamer, detected_schaar, detected_sleutel, total_detections, model_type, model_version)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         data['timestamp'],
         data['image_path'],
@@ -171,7 +283,13 @@ def save_analysis(data):
         json.dumps(data.get('missing_items', [])),
         data.get('face_count', 0),
         data.get('device_id', 'onbekend'),
-        data.get('workplace_id', None)
+        data.get('workplace_id', None),
+        data.get('detected_hamer', 0),
+        data.get('detected_schaar', 0),
+        data.get('detected_sleutel', 0),
+        data.get('total_detections', 0),
+        data.get('model_type', 'classification'),
+        data.get('model_version', None)  # Voeg model versie toe
     ))
 
     analysis_id = cursor.lastrowid
@@ -225,6 +343,7 @@ def update_correction(analysis_id, corrected_class, corrected_label, notes=None,
     Update analyse met correctie (voor model verbetering)
     BEHOUDT de originele predicted_class/label voor accuracy tracking!
     AUTOMATISCH markeren als training candidate bij fouten of lage confidence
+    VERWIJDERT foto van disk als beoordeeld als OK zonder correcties (bespaart schijfruimte)
 
     Args:
         analysis_id: ID van analyse
@@ -233,12 +352,13 @@ def update_correction(analysis_id, corrected_class, corrected_label, notes=None,
         notes: Optionele notities
         confidence_threshold: Dynamische drempel voor lage confidence (default 70%)
     """
+    import os
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
 
     # Haal eerst de originele analyse op om confidence en predicted_label te checken
     cursor.execute("""
-        SELECT predicted_label, confidence
+        SELECT predicted_label, confidence, image_path
         FROM analyses
         WHERE id = ?
     """, (analysis_id,))
@@ -248,21 +368,34 @@ def update_correction(analysis_id, corrected_class, corrected_label, notes=None,
         conn.close()
         raise ValueError(f"Analyse met ID {analysis_id} niet gevonden")
 
-    predicted_label, confidence = result
+    predicted_label, confidence, image_path = result
 
     # Bepaal of dit een training candidate is
     # Criteria: 1) Fout voorspeld OF 2) Lage confidence (onder dynamische drempel)
     is_incorrect = (predicted_label != corrected_label)
     threshold_decimal = confidence_threshold / 100.0  # Convert percentage naar decimaal
     is_low_confidence = (confidence < threshold_decimal)
-    should_be_training_candidate = is_incorrect or is_low_confidence
+    has_notes = notes and notes.strip() and notes.strip() != "{}"
+    should_be_training_candidate = is_incorrect or is_low_confidence or has_notes
 
     print(f"📝 Correctie ID {analysis_id}:")
     print(f"  - AI voorspelling: {predicted_label}")
     print(f"  - Correctie: {corrected_label}")
     print(f"  - Confidence: {confidence*100:.1f}%")
     print(f"  - Drempel: {confidence_threshold}%")
-    print(f"  - Training candidate: {should_be_training_candidate} (incorrect={is_incorrect}, low_conf={is_low_confidence})")
+    print(f"  - Training candidate: {should_be_training_candidate} (incorrect={is_incorrect}, low_conf={is_low_confidence}, has_notes={has_notes})")
+
+    # VERWIJDER foto van disk als beoordeeld als correct ZONDER correcties/notes
+    # (OK + geen fouten = geen trainingsdata → foto kan weg)
+    if not should_be_training_candidate and image_path:
+        try:
+            if os.path.exists(image_path):
+                os.remove(image_path)
+                print(f"🗑️  Foto verwijderd (OK zonder correcties): {image_path}")
+                # Zet image_path op NULL in database
+                image_path = None
+        except Exception as e:
+            print(f"⚠️  Kon foto niet verwijderen: {e}")
 
     # Update ALLEEN de correctie velden, NIET de predicted velden!
     # We moeten de originele AI voorspelling behouden voor accuracy tracking
@@ -271,13 +404,14 @@ def update_correction(analysis_id, corrected_class, corrected_label, notes=None,
         SET corrected_class = ?,
             corrected_label = ?,
             notes = ?,
-            training_candidate = ?
+            training_candidate = ?,
+            image_path = ?
         WHERE id = ?
-    """, (corrected_class, corrected_label, notes, 1 if should_be_training_candidate else 0, analysis_id))
+    """, (corrected_class, corrected_label, notes, 1 if should_be_training_candidate else 0, image_path, analysis_id))
 
     conn.commit()
     conn.close()
-    print(f"OK Correctie opgeslagen!")
+    print(f"✅ Correctie opgeslagen!")
 
 
 def get_statistics():
@@ -390,7 +524,8 @@ def get_training_candidates(confidence_threshold=70.0):
 
     # Haal alle gecorrigeerde analyses op die:
     # 1) Fout voorspeld ZIJN (predicted != corrected) OF
-    # 2) Lage confidence hebben (< drempel)
+    # 2) Lage confidence hebben (< drempel) OF
+    # 3) Expliciet gemarkeerd als training_candidate (via Training button)
     # EN nog niet geëxporteerd zijn
     cursor.execute("""
         SELECT * FROM analyses
@@ -399,6 +534,7 @@ def get_training_candidates(confidence_threshold=70.0):
         AND (
             predicted_label != corrected_label
             OR confidence < ?
+            OR training_candidate = 1
         )
         ORDER BY created_at DESC
     """, (threshold_decimal,))
@@ -626,6 +762,8 @@ def get_all_workplaces(active_only=True):
     for row in rows:
         workplace = dict(row)
         workplace['items'] = json.loads(workplace['items'])
+        if workplace.get('whiteboard_region'):
+            workplace['whiteboard_region'] = json.loads(workplace['whiteboard_region'])
         workplaces.append(workplace)
 
     conn.close()
@@ -652,6 +790,8 @@ def get_workplace(workplace_id):
     if row:
         workplace = dict(row)
         workplace['items'] = json.loads(workplace['items'])
+        if workplace.get('whiteboard_region'):
+            workplace['whiteboard_region'] = json.loads(workplace['whiteboard_region'])
         conn.close()
         return workplace
 
@@ -659,7 +799,7 @@ def get_workplace(workplace_id):
     return None
 
 
-def update_workplace(workplace_id, name=None, description=None, items=None, reference_photo=None, active=None):
+def update_workplace(workplace_id, name=None, description=None, items=None, reference_photo=None, active=None, confidence_threshold=None, whiteboard_region=None):
     """
     Update werkplek gegevens
 
@@ -670,6 +810,8 @@ def update_workplace(workplace_id, name=None, description=None, items=None, refe
         items: Nieuwe items list (optioneel)
         reference_photo: Nieuwe referentie foto (optioneel)
         active: Nieuwe active status (optioneel)
+        confidence_threshold: Confidence drempel voor detection (0.0-1.0, optioneel)
+        whiteboard_region: Whiteboard region dict met x1, y1, x2, y2 (percentages 0-1, optioneel)
     """
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
@@ -692,6 +834,12 @@ def update_workplace(workplace_id, name=None, description=None, items=None, refe
     if active is not None:
         updates.append("active = ?")
         params.append(1 if active else 0)
+    if confidence_threshold is not None:
+        updates.append("confidence_threshold = ?")
+        params.append(confidence_threshold)
+    if whiteboard_region is not None:
+        updates.append("whiteboard_region = ?")
+        params.append(json.dumps(whiteboard_region) if whiteboard_region else None)
 
     if updates:
         updates.append("updated_at = CURRENT_TIMESTAMP")
@@ -722,11 +870,70 @@ def delete_workplace(workplace_id):
     print(f"🗑️ Werkplek {workplace_id} verwijderd")
 
 
+def set_workplace_model(workplace_id, model_type, model_path):
+    """
+    Stel actief model in voor een werkplek
+
+    Args:
+        workplace_id: ID van werkplek
+        model_type: 'classification' of 'detection'
+        model_path: Pad naar model file (bijv. 'models/werkplek_detector (7).pt')
+    """
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE workplaces
+        SET active_model_type = ?,
+            active_model_path = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+    """, (model_type, model_path, workplace_id))
+
+    conn.commit()
+    conn.close()
+
+    print(f"✅ Werkplek {workplace_id}: model gezet naar {model_type} ({model_path})")
+
+
+def get_workplace_model(workplace_id):
+    """
+    Haal actief model configuratie op voor een werkplek (inclusief model versie)
+
+    Args:
+        workplace_id: ID van werkplek
+
+    Returns:
+        Dict met model_type, model_path en model_version, of None als niet geconfigureerd
+    """
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+
+    # Haal werkplek model info + actief model uit models tabel
+    cursor.execute("""
+        SELECT w.active_model_type, w.active_model_path, m.version
+        FROM workplaces w
+        LEFT JOIN models m ON m.workplace_id = w.id AND m.status = 'active'
+        WHERE w.id = ?
+    """, (workplace_id,))
+
+    result = cursor.fetchone()
+    conn.close()
+
+    if result and result[0]:
+        return {
+            'model_type': result[0],
+            'model_path': result[1],
+            'model_version': result[2]  # Kan None zijn als geen actief model in models tabel
+        }
+    return None
+
+
 # ========================================
 # TRAINING IMAGES FUNCTIES
 # ========================================
 
-def add_training_image(workplace_id, image_path, label, class_id=None, source='manual_upload'):
+def add_training_image(workplace_id, image_path, label, class_id=None, source='manual_upload', model_version=None):
     """
     Voeg training image toe aan dataset
 
@@ -736,6 +943,7 @@ def add_training_image(workplace_id, image_path, label, class_id=None, source='m
         label: Label (bijv. "ok", "nok_hamer_weg")
         class_id: Class ID (optioneel)
         source: Bron van afbeelding (manual_upload, production, camera)
+        model_version: Model versie waarvoor deze training image bedoeld is (optioneel)
 
     Returns:
         ID van training image
@@ -745,9 +953,9 @@ def add_training_image(workplace_id, image_path, label, class_id=None, source='m
 
     cursor.execute("""
         INSERT INTO training_images
-        (workplace_id, image_path, label, class_id, source)
-        VALUES (?, ?, ?, ?, ?)
-    """, (workplace_id, image_path, label, class_id, source))
+        (workplace_id, image_path, label, class_id, source, model_version)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (workplace_id, image_path, label, class_id, source, model_version))
 
     image_id = cursor.lastrowid
     conn.commit()
@@ -854,48 +1062,150 @@ def delete_training_image(image_id):
         return False, None
 
 
-def get_training_dataset_stats(workplace_id):
+def get_training_dataset_stats(workplace_id, model_version=None):
     """
-    Haal dataset statistieken op voor werkplek
+    Haal dataset statistieken op voor werkplek - focus op MODEL FOUTEN
 
     Args:
         workplace_id: ID van werkplek
+        model_version: Optioneel - filter op specifieke model versie (bijv. "v1.0", "v2.0")
 
     Returns:
-        Dict met statistieken
+        Dict met statistieken over model prestaties en fout types
     """
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
 
-    # Totaal aantal images
-    cursor.execute("SELECT COUNT(*) FROM training_images WHERE workplace_id = ?", (workplace_id,))
+    # Build WHERE clause with optional model_version filter
+    if model_version:
+        where_base = "workplace_id = ? AND model_version = ?"
+        params_base = (workplace_id, model_version)
+    else:
+        where_base = "workplace_id = ?"
+        params_base = (workplace_id,)
+
+    # Totaal aantal analyses/foto's voor deze werkplek (+ optioneel model filter)
+    cursor.execute(f"SELECT COUNT(*) FROM analyses WHERE {where_base}", params_base)
     total = cursor.fetchone()[0]
 
-    # Per label
-    cursor.execute("""
-        SELECT label, COUNT(*) as count
-        FROM training_images
-        WHERE workplace_id = ?
-        GROUP BY label
-    """, (workplace_id,))
-    label_counts = dict(cursor.fetchall())
+    # Beoordeelde foto's (hebben corrected_label)
+    cursor.execute(f"""
+        SELECT COUNT(*) FROM analyses
+        WHERE {where_base} AND corrected_label IS NOT NULL AND corrected_label != ''
+    """, params_base)
+    labeled_count = cursor.fetchone()[0]
 
-    # Validated vs unvalidated
-    cursor.execute("""
-        SELECT validated, COUNT(*) as count
-        FROM training_images
-        WHERE workplace_id = ?
-        GROUP BY validated
-    """, (workplace_id,))
-    validation_counts = dict(cursor.fetchall())
+    unlabeled_count = total - labeled_count
+
+    # MODEL ACCURACY: Correct voorspeld
+    cursor.execute(f"""
+        SELECT COUNT(*) FROM analyses
+        WHERE {where_base}
+        AND corrected_label IS NOT NULL
+        AND predicted_label = corrected_label
+    """, params_base)
+    correct_predictions = cursor.fetchone()[0]
+
+    # MODEL FOUTEN: Incorrect voorspeld
+    cursor.execute(f"""
+        SELECT COUNT(*) FROM analyses
+        WHERE {where_base}
+        AND corrected_label IS NOT NULL
+        AND predicted_label != corrected_label
+    """, params_base)
+    incorrect_predictions = cursor.fetchone()[0]
+
+    # FOUT TYPES: Welke fouten maakt het model?
+    # Groepeer op: predicted_label -> corrected_label (wat model zag vs wat het was)
+    cursor.execute(f"""
+        SELECT
+            predicted_label,
+            corrected_label,
+            COUNT(*) as count
+        FROM analyses
+        WHERE {where_base}
+        AND corrected_label IS NOT NULL
+        AND predicted_label != corrected_label
+        GROUP BY predicted_label, corrected_label
+        ORDER BY count DESC
+    """, params_base)
+
+    error_types = []
+    for pred_label, corr_label, count in cursor.fetchall():
+        error_types.append({
+            'predicted': pred_label,
+            'actual': corr_label,
+            'count': count,
+            'description': f"Model zei '{pred_label}' maar was '{corr_label}'"
+        })
+
+    # Distributie van corrected labels (voor training set balans)
+    cursor.execute(f"""
+        SELECT corrected_label, COUNT(*) as count
+        FROM analyses
+        WHERE {where_base} AND corrected_label IS NOT NULL AND corrected_label != ''
+        GROUP BY corrected_label
+        ORDER BY count DESC
+    """, params_base)
+    label_distribution = dict(cursor.fetchall())
+
+    # DETECTIE FOUTEN PER OBJECT (uit notes JSON)
+    # Haal alle analyses met notes op
+    cursor.execute(f"""
+        SELECT notes
+        FROM analyses
+        WHERE {where_base}
+        AND notes IS NOT NULL
+        AND notes != ''
+        AND notes != '{{}}'
+    """, params_base)
+
+    detection_errors = {
+        'missing': {},      # Item niet gedetecteerd (false negative)
+        'false_positive': {},  # Item foutief gedetecteerd (false positive)
+        'count_error': {}   # Verkeerd aantal gedetecteerd
+    }
+
+    import json
+    for (notes_json,) in cursor.fetchall():
+        try:
+            notes = json.loads(notes_json)
+
+            # Parse missing items
+            if 'missing_items' in notes and notes['missing_items']:
+                for item in notes['missing_items']:
+                    detection_errors['missing'][item] = detection_errors['missing'].get(item, 0) + 1
+
+            # Parse false positives
+            if 'false_positives' in notes and notes['false_positives']:
+                for item in notes['false_positives']:
+                    detection_errors['false_positive'][item] = detection_errors['false_positive'].get(item, 0) + 1
+
+            # Parse count errors
+            if 'incorrect_counts' in notes and notes['incorrect_counts']:
+                for item, count_data in notes['incorrect_counts'].items():
+                    detected = count_data.get('detected', 0)
+                    expected = count_data.get('expected', 0)
+                    error_key = f"{item} ({detected}x ipv {expected}x)"
+                    detection_errors['count_error'][error_key] = detection_errors['count_error'].get(error_key, 0) + 1
+        except:
+            continue
 
     conn.close()
 
+    accuracy = round((correct_predictions / labeled_count * 100), 1) if labeled_count > 0 else 0
+
     return {
         'total_images': total,
-        'label_distribution': label_counts,
-        'validated_count': validation_counts.get(1, 0),
-        'unvalidated_count': validation_counts.get(0, 0)
+        'labeled_count': labeled_count,
+        'unlabeled_count': unlabeled_count,
+        'training_ready': labeled_count,
+        'correct_predictions': correct_predictions,
+        'incorrect_predictions': incorrect_predictions,
+        'accuracy': accuracy,
+        'error_types': error_types,  # Top model fouten
+        'label_distribution': label_distribution,  # Training set verdeling
+        'detection_errors': detection_errors  # Detectie fouten per object
     }
 
 
@@ -924,7 +1234,7 @@ def validate_training_image(image_id, validated=True):
 # MODEL MANAGEMENT FUNCTIES
 # ========================================
 
-def register_model(workplace_id, version, model_path, uploaded_by='admin', test_accuracy=None, config=None, notes=None):
+def register_model(workplace_id, version, model_path, model_type='classification', uploaded_by='admin', test_accuracy=None, config=None, notes=None):
     """
     Registreer nieuw model in database
 
@@ -932,6 +1242,7 @@ def register_model(workplace_id, version, model_path, uploaded_by='admin', test_
         workplace_id: ID van werkplek
         version: Model versie (bijv. "v1.0", "v1.1")
         model_path: Pad naar model bestand
+        model_type: Type model ('classification' of 'detection')
         uploaded_by: Wie heeft het model geüpload
         test_accuracy: Test accuracy percentage
         config: JSON string met model config
@@ -945,15 +1256,15 @@ def register_model(workplace_id, version, model_path, uploaded_by='admin', test_
 
     cursor.execute("""
         INSERT INTO models
-        (workplace_id, version, model_path, uploaded_by, test_accuracy, config, notes)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, (workplace_id, version, model_path, uploaded_by, test_accuracy, config, notes))
+        (workplace_id, version, model_path, model_type, uploaded_by, test_accuracy, config, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (workplace_id, version, model_path, model_type, uploaded_by, test_accuracy, config, notes))
 
     model_id = cursor.lastrowid
     conn.commit()
     conn.close()
 
-    print(f"OK Model {version} geregistreerd voor werkplek {workplace_id} (ID: {model_id})")
+    print(f"✅ Model {version} ({model_type}) geregistreerd voor werkplek {workplace_id} (ID: {model_id})")
     return model_id
 
 
@@ -1022,6 +1333,7 @@ def get_active_model(workplace_id):
 def activate_model(model_id):
     """
     Activeer model (deactiveer andere modellen voor deze werkplek)
+    en update werkplek configuratie
 
     Args:
         model_id: ID van model om te activeren
@@ -1029,15 +1341,15 @@ def activate_model(model_id):
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
 
-    # Haal werkplek ID op
-    cursor.execute("SELECT workplace_id FROM models WHERE id = ?", (model_id,))
+    # Haal model info op
+    cursor.execute("SELECT workplace_id, model_path, model_type FROM models WHERE id = ?", (model_id,))
     result = cursor.fetchone()
 
     if not result:
         conn.close()
         raise ValueError(f"Model {model_id} niet gevonden")
 
-    workplace_id = result[0]
+    workplace_id, model_path, model_type = result
 
     # Deactiveer alle andere modellen voor deze werkplek
     cursor.execute("""
@@ -1053,10 +1365,19 @@ def activate_model(model_id):
         WHERE id = ?
     """, (model_id,))
 
+    # Update werkplek met actieve model configuratie
+    cursor.execute("""
+        UPDATE workplaces
+        SET active_model_type = ?,
+            active_model_path = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+    """, (model_type, model_path, workplace_id))
+
     conn.commit()
     conn.close()
 
-    print(f"OK Model {model_id} geactiveerd voor werkplek {workplace_id}")
+    print(f"✅ Model {model_id} geactiveerd voor werkplek {workplace_id} ({model_type} type)")
 
 
 # ========================================

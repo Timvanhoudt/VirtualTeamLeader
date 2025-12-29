@@ -34,7 +34,9 @@
       "Bash(certutil -hashfile:*)",
       "Bash(tasklist:*)",
       "Bash(openssl req:*)",
-      "Bash(ipconfig:*)"
+      "Bash(ipconfig:*)",
+      "Bash(git pull:*)",
+      "Bash(git push:*)"
     ]
   }
 }

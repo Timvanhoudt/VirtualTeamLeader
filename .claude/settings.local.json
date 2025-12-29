@@ -18,7 +18,23 @@
       "Bash(netstat:*)",
       "Bash(findstr:*)",
       "Bash(if exist \"c:\\\\Users\\\\Admin\\\\VisualCode\\\\Projects\\\\School\\\\VirtualTeamLeader\\\\RefresCO_v2_MLOps\\\\backend\\\\data\" dir /b \"c:\\\\Users\\\\Admin\\\\VisualCode\\\\Projects\\\\School\\\\VirtualTeamLeader\\\\RefresCO_v2_MLOps\\\\backend\\\\data\")",
-      "Bash(powershell -ExecutionPolicy Bypass -File clear_all_data.ps1)"
+      "Bash(powershell -ExecutionPolicy Bypass -File clear_all_data.ps1)",
+      "Bash(if exist backenddatacolab_dataset_ready dir /b backenddatacolab_dataset_ready)",
+      "Bash(pip install:*)",
+      "Bash(label-studio start:*)",
+      "Bash(where:*)",
+      "Bash(pip uninstall:*)",
+      "Bash(\"C:\\\\Users\\\\Admin\\\\AppData\\\\Roaming\\\\Python\\\\Python312\\\\Scripts\\\\label-studio.exe\" start --port 8080)",
+      "Bash(npm run build:*)",
+      "Bash(timeout /t 3)",
+      "Bash(powershell -Command:*)",
+      "Bash(sqlite3:*)",
+      "Bash(git rm:*)",
+      "Bash(git add:*)",
+      "Bash(certutil -hashfile:*)",
+      "Bash(tasklist:*)",
+      "Bash(openssl req:*)",
+      "Bash(ipconfig:*)"
     ]
   }
 }

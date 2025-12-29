@@ -44,5 +44,32 @@ Usecases voor ons zouden kunnen zijn:
 
 Waarom moet je het model nog trainen, is dat voor de laatste fase? 
 
+24/12/25
+er zijn verschillende soorten type computervision technieken 1. Classificatie 2. Object detection (bounding boxes) 3. Segmentation (pixellevel)
+voor deze verschillende types gebruik je ook verschillende pretrained modellen.
+Deze modellen zijn vantevoren al getraind en kun je verder trainen op je eigen situatie. 
+Hierin train je de gewichten (getallen) die je situatie gaan herkennen.
+
+Bij objectie detectie is het belangrijk dat het model echt het object leert kennen los van de achtergrond , dus niet het plaatje beoordeelt maar echt het object in het plaatje,
+dus aantallen en locatie is in het plaatje kan hij dan bepalen, om het te trainen moet men veel data aanleveren dat vantevoren is geannoteerd, 
+het model moet leren dat het object in verschillende situaties kan zijn , wittevloer doneklere vloer , tegelvloer etct, objecct blijft hetzlefdde, alles erom heen wordt anders
+
+pytorch/tensorflow is een frame work om een model op te bouwen , hij bezit een aantal tools, hierin wordt het netwerk architectuur van het model bepaalt.
+Wanneer het model gemaakt is kun je het downloaden en gebruiken, enigste wat je nog kunt aanpassen zijn de gewichten van het model. Deze modellen zijn al goed in het herkennen van lijnen en contrasten. 
+Vaak zijn ze ook al getraind op een aantal objecten COCO , voor eigengebruik moet je je eigen fotos toevoegen en hierop trainen. transfer learning wordt dit genoemd. 
+Model kun je ook weer hertrainen met nieuwe data (extra data om het model beter te maken), let op dat je het model niet kapot maakt , dat hij het voorgaande geleerde weer gaat vergeten.
+
+Normaal heeft men ook een feedback loop wanneer in productie.  ML life cycle management
+
+
+
+confusion matrix kun je zien waar de zwakheden of sterkte zitten, confusion matrix normalised, 
+
+
+
+
+
+
+
 
 

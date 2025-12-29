@@ -6,18 +6,53 @@ Detecteert en blurt gezichten in afbeeldingen
 import cv2
 import numpy as np
 from pathlib import Path
+import urllib.request
+import os
 
 class FaceBlurrer:
     def __init__(self):
-        """Initialiseer face detection met OpenCV Haar Cascade"""
-        # Probeer het Haar Cascade model te laden
-        cascade_path = cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
-        self.face_cascade = cv2.CascadeClassifier(cascade_path)
+        """Initialiseer face detection met YuNet (modern DNN model)"""
+        # Download YuNet model als het niet bestaat
+        model_path = Path("models/face_detection_yunet_2023mar.onnx")
+        model_path.parent.mkdir(exist_ok=True)
 
-        if self.face_cascade.empty():
-            raise Exception("❌ Kon face detection model niet laden")
+        if not model_path.exists():
+            print("📥 Downloading YuNet face detection model...")
+            url = "https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx"
+            try:
+                urllib.request.urlretrieve(url, str(model_path))
+                print("✓ YuNet model downloaded")
+            except Exception as e:
+                print(f"⚠ Could not download YuNet model: {e}")
+                print("Falling back to Haar Cascade...")
+                # Fallback naar Haar Cascade
+                cascade_path = cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
+                self.face_cascade = cv2.CascadeClassifier(cascade_path)
+                self.detector = None
+                if not self.face_cascade.empty():
+                    print("✓ Haar Cascade face detection model geladen (fallback)")
+                return
 
-        print("✓ Face detection model geladen")
+        # Initialiseer YuNet detector
+        try:
+            self.detector = cv2.FaceDetectorYN.create(
+                str(model_path),
+                "",
+                (320, 320),
+                score_threshold=0.6,  # Hogere threshold = minder false positives
+                nms_threshold=0.3,
+                top_k=5000
+            )
+            self.face_cascade = None
+            print("✓ YuNet face detection model geladen")
+        except Exception as e:
+            print(f"⚠ Could not load YuNet: {e}")
+            print("Falling back to Haar Cascade...")
+            cascade_path = cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
+            self.face_cascade = cv2.CascadeClassifier(cascade_path)
+            self.detector = None
+            if not self.face_cascade.empty():
+                print("✓ Haar Cascade face detection model geladen (fallback)")
 
     def blur_faces(self, image, blur_strength=99):
         """
@@ -28,43 +63,93 @@ class FaceBlurrer:
             blur_strength: sterkte van de blur (oneven getal, hoger = meer blur)
 
         Returns:
-            Afbeelding met geblurde gezichten
+            Afbeelding met geblurde gezichten, aantal gezichten
         """
         # Zorg dat blur strength een oneven getal is
         if blur_strength % 2 == 0:
             blur_strength += 1
 
-        # Convert naar grijswaarden voor detectie
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        # Gebruik YuNet als beschikbaar, anders Haar Cascade
+        if self.detector is not None:
+            # YuNet detection - resize voor snelheid
+            height, width = image.shape[:2]
 
-        # Detecteer gezichten
-        faces = self.face_cascade.detectMultiScale(
-            gray,
-            scaleFactor=1.1,
-            minNeighbors=5,
-            minSize=(30, 30),
-            flags=cv2.CASCADE_SCALE_IMAGE
-        )
+            # Resize naar max 640px voor snellere face detection
+            max_size = 640
+            if width > max_size or height > max_size:
+                scale = max_size / max(width, height)
+                new_width = int(width * scale)
+                new_height = int(height * scale)
+                resized = cv2.resize(image, (new_width, new_height))
+            else:
+                resized = image
+                scale = 1.0
 
-        # Blur elk gedetecteerd gezicht
-        for (x, y, w, h) in faces:
-            # Vergroot de ROI iets voor betere coverage
-            padding = 20
-            x1 = max(0, x - padding)
-            y1 = max(0, y - padding)
-            x2 = min(image.shape[1], x + w + padding)
-            y2 = min(image.shape[0], y + h + padding)
+            # Set input size voor detector
+            self.detector.setInputSize((resized.shape[1], resized.shape[0]))
 
-            # Extract face region
-            face_region = image[y1:y2, x1:x2]
+            # Detecteer gezichten op verkleinde foto
+            _, faces = self.detector.detect(resized)
 
-            # Blur het gezicht
-            blurred_face = cv2.GaussianBlur(face_region, (blur_strength, blur_strength), 0)
+            if faces is None:
+                return image, 0
 
-            # Plaats terug in originele afbeelding
-            image[y1:y2, x1:x2] = blurred_face
+            # Blur elk gedetecteerd gezicht
+            for face in faces:
+                # YuNet geeft: x, y, w, h, score, landmarks...
+                x, y, w, h = face[:4].astype(int)
 
-        return image, len(faces)
+                # Schaal terug naar originele resolutie
+                if scale != 1.0:
+                    x = int(x / scale)
+                    y = int(y / scale)
+                    w = int(w / scale)
+                    h = int(h / scale)
+
+                # Vergroot de ROI iets voor betere coverage
+                padding = 20
+                x1 = max(0, x - padding)
+                y1 = max(0, y - padding)
+                x2 = min(width, x + w + padding)
+                y2 = min(height, y + h + padding)
+
+                # Extract face region
+                face_region = image[y1:y2, x1:x2]
+
+                if face_region.size > 0:
+                    # Blur het gezicht
+                    blurred_face = cv2.GaussianBlur(face_region, (blur_strength, blur_strength), 0)
+                    # Plaats terug in originele afbeelding
+                    image[y1:y2, x1:x2] = blurred_face
+
+            return image, len(faces)
+        else:
+            # Fallback: Haar Cascade detection
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            gray = cv2.equalizeHist(gray)
+
+            faces = self.face_cascade.detectMultiScale(
+                gray,
+                scaleFactor=1.1,
+                minNeighbors=4,
+                minSize=(30, 30),
+                flags=cv2.CASCADE_SCALE_IMAGE
+            )
+
+            # Blur elk gedetecteerd gezicht
+            for (x, y, w, h) in faces:
+                padding = 20
+                x1 = max(0, x - padding)
+                y1 = max(0, y - padding)
+                x2 = min(image.shape[1], x + w + padding)
+                y2 = min(image.shape[0], y + h + padding)
+
+                face_region = image[y1:y2, x1:x2]
+                if face_region.size > 0:
+                    blurred_face = cv2.GaussianBlur(face_region, (blur_strength, blur_strength), 0)
+                    image[y1:y2, x1:x2] = blurred_face
+
+            return image, len(faces)
 
     def process_image_file(self, input_path, output_path=None, blur_strength=99):
         """

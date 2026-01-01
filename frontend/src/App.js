@@ -6,10 +6,10 @@ import { rotateImage } from './imageUtils';
 // History is now integrated in Admin - Training Data tab
 import Admin from './Admin';
 
-// API URL - HTTP backend, HTTPS frontend (mixed content toegestaan in dev)
+// API URL - Backend draait op HTTPS
 const API_URL = window.location.hostname === 'localhost'
-  ? 'http://localhost:8000'
-  : `http://${window.location.hostname}:8000`;
+  ? 'https://localhost:8000'
+  : `https://${window.location.hostname}:8000`;
 
 function App() {
   const webcamRef = useRef(null);
@@ -38,6 +38,13 @@ function App() {
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [privacyWarning, setPrivacyWarning] = useState(null);
   const [useNativeCamera, setUseNativeCamera] = useState(false);
+
+  // Live feed mode (optioneel)
+  const [liveFeedMode, setLiveFeedMode] = useState(false);
+  const [liveDetections, setLiveDetections] = useState(null);
+  const [liveFps, setLiveFps] = useState(0);
+  const liveIntervalRef = useRef(null);
+  const lastFrameTimeRef = useRef(null);
 
   // Batch collection mode removed - moved to Admin only
 
@@ -95,29 +102,40 @@ function App() {
   // Model type wordt beheerd in Admin - operators gebruiken actieve model
 
   const loadWorkplacesWithModels = async () => {
+    console.log('🔍 [App] Loading workplaces from:', `${API_URL}/api/workplaces`);
     try {
       const response = await axios.get(`${API_URL}/api/workplaces`);
+      console.log('📊 [App] Workplaces response:', response.data);
+
       if (response.data.success) {
         // Filter only workplaces with active models for operator interface
         const workplacesWithModels = [];
 
         for (const workplace of response.data.workplaces) {
+          console.log(`🔍 [App] Checking models for workplace ${workplace.id} (${workplace.name})`);
           const modelsResponse = await axios.get(`${API_URL}/api/workplaces/${workplace.id}/models`);
+          console.log(`📊 [App] Models response for ${workplace.name}:`, modelsResponse.data);
+
           if (modelsResponse.data.success) {
-            const hasActiveModel = modelsResponse.data.models.some(m => m.status === 'active');
+            const hasActiveModel = modelsResponse.data.models.some(m => m.is_active === true);
+            console.log(`✓ [App] ${workplace.name} has active model:`, hasActiveModel);
             if (hasActiveModel) {
               workplacesWithModels.push(workplace);
             }
           }
         }
 
+        console.log('✅ [App] Workplaces with active models:', workplacesWithModels);
         setWorkplaces(workplacesWithModels);
         if (workplacesWithModels.length > 0) {
           setSelectedWorkplace(workplacesWithModels[0]);
+          console.log('📍 [App] Selected workplace:', workplacesWithModels[0].name);
+        } else {
+          console.log('⚠️ [App] No workplaces with active models found!');
         }
       }
     } catch (error) {
-      console.error('Error loading workplaces:', error);
+      console.error('❌ [App] Error loading workplaces:', error);
     }
   };
 
@@ -125,7 +143,7 @@ function App() {
     try {
       const response = await axios.get(`${API_URL}/api/workplaces/${workplaceId}/models`);
       if (response.data.success) {
-        const activeModel = response.data.models.find(m => m.status === 'active');
+        const activeModel = response.data.models.find(m => m.is_active === true);
         setHasActiveModel(!!activeModel);
       }
     } catch (error) {
@@ -290,11 +308,29 @@ function App() {
 
     try {
       const blob = await (await fetch(testImage)).blob();
+
+      // Collect camera/photo metadata
+      const img = new Image();
+      img.src = testImage;
+      await new Promise(resolve => img.onload = resolve);
+
+      const cameraMetadata = {
+        resolution_width: img.width,
+        resolution_height: img.height,
+        file_size_bytes: blob.size,
+        file_size_kb: Math.round(blob.size / 1024),
+        image_format: blob.type || 'image/jpeg',
+        camera_facing: useNativeCamera ? 'environment' : 'webcam',
+        browser: navigator.userAgent,
+        capture_method: useNativeCamera ? 'native' : 'react-webcam'
+      };
+
       const formData = new FormData();
       formData.append('file', blob, 'test.jpg');
       formData.append('blur_faces', 'true');
       formData.append('workplace_id', selectedWorkplace.id);
       formData.append('session_id', sessionId);  // Add session ID
+      formData.append('camera_metadata', JSON.stringify(cameraMetadata));  // Add camera metadata
       // Confidence threshold komt uit werkplek instellingen
       const threshold = selectedWorkplace.confidence_threshold || 0.25;
       formData.append('confidence_threshold', threshold.toString());
@@ -462,8 +498,116 @@ function App() {
 
   // Training data functions removed - moved to Admin only
 
+  // Live Feed Functions
+  const startLiveFeed = useCallback(() => {
+    if (!cameraMode || !videoRef.current || !selectedWorkplace) {
+      alert('Start eerst de camera en selecteer een werkplek');
+      return;
+    }
+
+    console.log('🎥 Starting live feed analysis...');
+    setLiveFeedMode(true);
+    setLiveDetections(null);
+    lastFrameTimeRef.current = Date.now();
+
+    // Capture and analyze frames every 1.5 seconds
+    liveIntervalRef.current = setInterval(async () => {
+      try {
+        const startTime = Date.now();
+
+        // Capture frame from video
+        const canvas = document.createElement('canvas');
+        const video = videoRef.current;
+
+        if (!video || video.paused || video.ended) {
+          console.log('⚠️ Video not ready, skipping frame');
+          return;
+        }
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+
+        // Convert to blob
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+
+        // Prepare FormData
+        const formData = new FormData();
+        formData.append('file', blob, 'live_frame.jpg');
+        formData.append('blur_faces', 'false'); // Skip face blur for speed
+        formData.append('workplace_id', selectedWorkplace.id);
+        const threshold = selectedWorkplace.confidence_threshold || 0.25;
+        formData.append('confidence_threshold', threshold.toString());
+
+        // Send to backend
+        const response = await axios.post(`${API_URL}/api/inspect`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+
+        // Update detections
+        setLiveDetections(response.data);
+
+        // Calculate FPS
+        const endTime = Date.now();
+        const frameTime = endTime - lastFrameTimeRef.current;
+        const fps = 1000 / frameTime;
+        setLiveFps(fps.toFixed(1));
+        lastFrameTimeRef.current = endTime;
+
+        console.log(`✅ Frame analyzed in ${endTime - startTime}ms, FPS: ${fps.toFixed(1)}`);
+
+      } catch (error) {
+        console.error('❌ Live feed error:', error);
+        // Don't stop on error, just log it
+      }
+    }, 1500); // Every 1.5 seconds
+
+  }, [cameraMode, selectedWorkplace]);
+
+  const stopLiveFeed = useCallback(() => {
+    console.log('⏹️ Stopping live feed...');
+    if (liveIntervalRef.current) {
+      clearInterval(liveIntervalRef.current);
+      liveIntervalRef.current = null;
+    }
+    setLiveFeedMode(false);
+    setLiveDetections(null);
+    setLiveFps(0);
+
+    // Clear canvas
+    if (canvasRef.current) {
+      const ctx = canvasRef.current.getContext('2d');
+      ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    }
+  }, []);
+
+  // Auto-stop live feed when camera closes
+  useEffect(() => {
+    if (!cameraMode && liveFeedMode) {
+      stopLiveFeed();
+    }
+  }, [cameraMode, liveFeedMode, stopLiveFeed]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (liveIntervalRef.current) {
+        clearInterval(liveIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // Draw bounding boxes for live feed
+  useEffect(() => {
+    if (liveFeedMode && liveDetections && liveDetections.detection && liveDetections.detection.bounding_boxes) {
+      drawBoundingBoxes(liveDetections.detection.bounding_boxes);
+    }
+  }, [liveDetections, liveFeedMode, drawBoundingBoxes]);
+
   // Reset
   const reset = () => {
+    stopLiveFeed(); // Stop live feed if active
     setTestImage(null);
     setResults(null);
     setCameraMode(false);
@@ -628,9 +772,81 @@ function App() {
                             )}
                           </div>
                         )}
-                        <button onClick={capturePhoto} className="capture-button">
-                          Maak Foto
-                        </button>
+
+                        {/* Camera Controls */}
+                        <div style={{display: 'flex', gap: '10px', marginTop: '10px'}}>
+                          <button onClick={capturePhoto} className="capture-button" style={{flex: 1}}>
+                            📸 Maak Foto
+                          </button>
+
+                          {/* Live Feed Toggle */}
+                          {!liveFeedMode ? (
+                            <button
+                              onClick={startLiveFeed}
+                              className="capture-button"
+                              style={{flex: 1, background: '#4ECDC4'}}
+                            >
+                              ▶️ Live Analyse
+                            </button>
+                          ) : (
+                            <button
+                              onClick={stopLiveFeed}
+                              className="capture-button"
+                              style={{flex: 1, background: '#FF6B6B'}}
+                            >
+                              ⏹️ Stop Live
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Live Feed Overlay */}
+                        {liveFeedMode && (
+                          <canvas
+                            ref={canvasRef}
+                            className="bounding-box-canvas"
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              width: '100%',
+                              height: '100%',
+                              pointerEvents: 'none'
+                            }}
+                          />
+                        )}
+
+                        {/* Live Feed Status */}
+                        {liveFeedMode && liveDetections && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '10px',
+                            left: '10px',
+                            background: 'rgba(0,0,0,0.7)',
+                            color: 'white',
+                            padding: '10px',
+                            borderRadius: '8px',
+                            fontSize: '14px',
+                            zIndex: 10
+                          }}>
+                            <div style={{marginBottom: '5px'}}>
+                              <strong>🎥 Live Analyse</strong>
+                            </div>
+                            <div>Status: {liveDetections.step1_classification?.status === 'ok' ? '✅ OK' : '❌ NOK'}</div>
+                            <div>Confidence: {(liveDetections.step1_classification?.confidence * 100).toFixed(0)}%</div>
+                            {liveDetections.detection && (
+                              <>
+                                <div style={{marginTop: '5px', borderTop: '1px solid #666', paddingTop: '5px'}}>
+                                  🔨 Hamer: {liveDetections.detection.detected_objects?.hamer || 0}
+                                </div>
+                                <div>✂️ Schaar: {liveDetections.detection.detected_objects?.schaar || 0}</div>
+                                <div>🔑 Sleutel: {liveDetections.detection.detected_objects?.sleutel || 0}</div>
+                              </>
+                            )}
+                            <div style={{marginTop: '5px', fontSize: '12px', color: '#aaa'}}>
+                              FPS: {liveFps}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ) : testImage ? (
                       <div className="test-image-wrapper">

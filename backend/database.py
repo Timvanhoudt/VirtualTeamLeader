@@ -1,262 +1,37 @@
 """
-Database module voor analyse logging
+Database module voor analyse logging - PostgreSQL versie
 Slaat alle analyses op voor latere review en model verbetering
 """
 
-import sqlite3
+import psycopg2
+from psycopg2.extras import RealDictCursor
+import os
+from dotenv import load_dotenv
 from datetime import datetime
 from pathlib import Path
 import json
 
-DATABASE_PATH = Path("data/analyses.db")
+load_dotenv()
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-def init_database():
-    """Initialiseer database en maak tabellen aan"""
-    DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
+def get_db_connection():
+    """Maak database connectie met RealDictCursor"""
+    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
 
-    # ===== BESTAANDE TABEL: analyses =====
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS analyses (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT NOT NULL,
-            image_path TEXT NOT NULL,
-            predicted_class TEXT NOT NULL,
-            predicted_label TEXT NOT NULL,
-            confidence REAL NOT NULL,
-            status TEXT NOT NULL,
-            missing_items TEXT,
-            corrected_class TEXT,
-            corrected_label TEXT,
-            notes TEXT,
-            face_count INTEGER DEFAULT 0,
-            training_candidate BOOLEAN DEFAULT 0,
-            exported_for_training BOOLEAN DEFAULT 0,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            workplace_id INTEGER,
-            model_version TEXT
-        )
-    """)
-
-    # ===== NIEUWE TABEL: workplaces =====
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS workplaces (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL UNIQUE,
-            description TEXT,
-            items TEXT NOT NULL,
-            reference_photo TEXT,
-            active BOOLEAN DEFAULT 1,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-
-    # ===== NIEUWE TABEL: training_images =====
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS training_images (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            workplace_id INTEGER NOT NULL,
-            image_path TEXT NOT NULL,
-            label TEXT NOT NULL,
-            class_id INTEGER,
-            source TEXT DEFAULT 'manual_upload',
-            validated BOOLEAN DEFAULT 0,
-            used_in_training BOOLEAN DEFAULT 0,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (workplace_id) REFERENCES workplaces(id) ON DELETE CASCADE
-        )
-    """)
-
-    # ===== NIEUWE TABEL: models =====
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS models (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            workplace_id INTEGER NOT NULL,
-            version TEXT NOT NULL,
-            model_path TEXT NOT NULL,
-            model_type TEXT DEFAULT 'classification',
-            uploaded_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            uploaded_by TEXT DEFAULT 'admin',
-            status TEXT DEFAULT 'uploaded',
-            test_accuracy REAL,
-            config TEXT,
-            notes TEXT,
-            FOREIGN KEY (workplace_id) REFERENCES workplaces(id) ON DELETE CASCADE
-        )
-    """)
-
-    # ===== NIEUWE TABEL: dataset_exports =====
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS dataset_exports (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            workplace_id INTEGER NOT NULL,
-            export_path TEXT NOT NULL,
-            image_count INTEGER,
-            class_distribution TEXT,
-            exported_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            exported_by TEXT DEFAULT 'admin',
-            notes TEXT,
-            FOREIGN KEY (workplace_id) REFERENCES workplaces(id) ON DELETE CASCADE
-        )
-    """)
-
-    # Migratie: voeg nieuwe kolommen toe als ze niet bestaan
-    try:
-        cursor.execute("SELECT training_candidate FROM analyses LIMIT 1")
-    except sqlite3.OperationalError:
-        print("Migratie: training_candidate kolom toevoegen...")
-        cursor.execute("ALTER TABLE analyses ADD COLUMN training_candidate BOOLEAN DEFAULT 0")
-        conn.commit()
-
-    try:
-        cursor.execute("SELECT exported_for_training FROM analyses LIMIT 1")
-    except sqlite3.OperationalError:
-        print("Migratie: exported_for_training kolom toevoegen...")
-        cursor.execute("ALTER TABLE analyses ADD COLUMN exported_for_training BOOLEAN DEFAULT 0")
-        conn.commit()
-
-    try:
-        cursor.execute("SELECT device_id FROM analyses LIMIT 1")
-    except sqlite3.OperationalError:
-        print("Migratie: device_id kolom toevoegen...")
-        cursor.execute("ALTER TABLE analyses ADD COLUMN device_id TEXT DEFAULT 'onbekend'")
-        conn.commit()
-
-    try:
-        cursor.execute("SELECT workplace_id FROM analyses LIMIT 1")
-    except sqlite3.OperationalError:
-        print("Migratie: workplace_id kolom toevoegen...")
-        cursor.execute("ALTER TABLE analyses ADD COLUMN workplace_id INTEGER")
-        conn.commit()
-
-    try:
-        cursor.execute("SELECT model_version FROM analyses LIMIT 1")
-    except sqlite3.OperationalError:
-        print("Migratie: model_version kolom toevoegen...")
-        cursor.execute("ALTER TABLE analyses ADD COLUMN model_version TEXT")
-        conn.commit()
-
-    # Nieuwe kolommen voor object detection counts
-    try:
-        cursor.execute("SELECT detected_hamer FROM analyses LIMIT 1")
-    except sqlite3.OperationalError:
-        print("Migratie: detection counts kolommen toevoegen...")
-        cursor.execute("ALTER TABLE analyses ADD COLUMN detected_hamer INTEGER DEFAULT 0")
-        cursor.execute("ALTER TABLE analyses ADD COLUMN detected_schaar INTEGER DEFAULT 0")
-        cursor.execute("ALTER TABLE analyses ADD COLUMN detected_sleutel INTEGER DEFAULT 0")
-        cursor.execute("ALTER TABLE analyses ADD COLUMN total_detections INTEGER DEFAULT 0")
-        cursor.execute("ALTER TABLE analyses ADD COLUMN model_type TEXT DEFAULT 'classification'")
-        conn.commit()
-
-    # Werkplek model configuratie kolommen
-    try:
-        cursor.execute("SELECT active_model_type FROM workplaces LIMIT 1")
-    except sqlite3.OperationalError:
-        print("Migratie: werkplek model configuratie kolommen toevoegen...")
-        cursor.execute("ALTER TABLE workplaces ADD COLUMN active_model_type TEXT DEFAULT 'classification'")
-        cursor.execute("ALTER TABLE workplaces ADD COLUMN active_model_path TEXT")
-        conn.commit()
-
-    # Migratie: model_type kolom in models tabel
-    try:
-        cursor.execute("SELECT model_type FROM models LIMIT 1")
-    except sqlite3.OperationalError:
-        print("Migratie: model_type kolom toevoegen aan models tabel...")
-        cursor.execute("ALTER TABLE models ADD COLUMN model_type TEXT DEFAULT 'classification'")
-        conn.commit()
-
-    # Migratie: confidence_threshold kolom in workplaces tabel
-    try:
-        cursor.execute("SELECT confidence_threshold FROM workplaces LIMIT 1")
-    except sqlite3.OperationalError:
-        print("Migratie: confidence_threshold kolom toevoegen aan workplaces tabel...")
-        cursor.execute("ALTER TABLE workplaces ADD COLUMN confidence_threshold REAL DEFAULT 0.25")
-        conn.commit()
-
-    # Migratie: whiteboard_region kolom in workplaces tabel (JSON met {x1, y1, x2, y2} percentages)
-    try:
-        cursor.execute("SELECT whiteboard_region FROM workplaces LIMIT 1")
-    except sqlite3.OperationalError:
-        print("Migratie: whiteboard_region kolom toevoegen aan workplaces tabel...")
-        cursor.execute("ALTER TABLE workplaces ADD COLUMN whiteboard_region TEXT")
-        conn.commit()
-
-    # Migratie: image_path mag NULL zijn (voor verwijderde OK foto's)
-    # SQLite ondersteunt geen ALTER COLUMN, dus we moeten tabel opnieuw maken
-    try:
-        # Check of NOT NULL constraint nog bestaat
-        cursor.execute("PRAGMA table_info(analyses)")
-        columns = cursor.fetchall()
-        image_path_col = next((col for col in columns if col[1] == 'image_path'), None)
-
-        # col[3] is notnull flag (1 = NOT NULL, 0 = NULL allowed)
-        if image_path_col and image_path_col[3] == 1:
-            print("Migratie: image_path NOT NULL constraint verwijderen...")
-
-            # Stap 1: Maak nieuwe tabel zonder NOT NULL op image_path
-            cursor.execute("""
-                CREATE TABLE analyses_new (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    timestamp TEXT NOT NULL,
-                    image_path TEXT,
-                    predicted_class TEXT NOT NULL,
-                    predicted_label TEXT NOT NULL,
-                    confidence REAL NOT NULL,
-                    status TEXT NOT NULL,
-                    missing_items TEXT,
-                    corrected_class TEXT,
-                    corrected_label TEXT,
-                    notes TEXT,
-                    face_count INTEGER DEFAULT 0,
-                    training_candidate BOOLEAN DEFAULT 0,
-                    exported_for_training BOOLEAN DEFAULT 0,
-                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-                    workplace_id INTEGER,
-                    model_version TEXT,
-                    device_id TEXT DEFAULT 'onbekend',
-                    detected_hamer INTEGER DEFAULT 0,
-                    detected_schaar INTEGER DEFAULT 0,
-                    detected_sleutel INTEGER DEFAULT 0,
-                    total_detections INTEGER DEFAULT 0,
-                    model_type TEXT DEFAULT 'classification'
-                )
-            """)
-
-            # Stap 2: Kopieer alle data
-            cursor.execute("""
-                INSERT INTO analyses_new
-                SELECT * FROM analyses
-            """)
-
-            # Stap 3: Verwijder oude tabel en hernoem nieuwe
-            cursor.execute("DROP TABLE analyses")
-            cursor.execute("ALTER TABLE analyses_new RENAME TO analyses")
-
-            conn.commit()
-            print("✅ Migratie voltooid: image_path mag nu NULL zijn")
-    except Exception as e:
-        print(f"⚠️ Migratie waarschuwing: {e}")
-        conn.rollback()
-
-    # Migratie: model_version kolom in training_images tabel
-    try:
-        cursor.execute("SELECT model_version FROM training_images LIMIT 1")
-    except sqlite3.OperationalError:
-        print("Migratie: model_version kolom toevoegen aan training_images tabel...")
-        cursor.execute("ALTER TABLE training_images ADD COLUMN model_version TEXT")
-        conn.commit()
-
-    conn.commit()
-    conn.close()
-    print("OK Database geinitaliseerd met alle tabellen")
+# NOTE: init_database() removed - PostgreSQL schema already exists!
+# Schema is managed externally and has different field names than SQLite
+# DO NOT recreate or alter tables - this will break existing data!
 
 
 def save_analysis(data):
     """
     Sla analyse resultaat op in database
+
+    PostgreSQL Schema Mapping:
+    - status -> result
+    - predicted_class/predicted_label -> model_prediction
+    - missing_items -> metadata (jsonb)
 
     Args:
         data: Dict met analyse gegevens
@@ -264,35 +39,66 @@ def save_analysis(data):
     Returns:
         ID van opgeslagen analyse
     """
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
+
+    # FIX #2: Confidence NULL prevention - ensure confidence is never NULL
+    confidence = data.get('confidence')
+    if confidence is None:
+        confidence = 0.0
+
+    # Map frontend fields to PostgreSQL fields
+    # Frontend sends: status, predicted_class, predicted_label
+    # PostgreSQL has: result, model_prediction
+    result = data.get('status', 'OK')  # status -> result
+    model_prediction = data.get('predicted_label') or data.get('predicted_class', 'unknown')
+
+    # Build metadata JSON from missing_items and other detection info
+    metadata = {}
+    if 'missing_items' in data:
+        metadata['missing_items'] = data['missing_items']
+    if 'detected_hamer' in data:
+        metadata['detected_hamer'] = data['detected_hamer']
+    if 'detected_schaar' in data:
+        metadata['detected_schaar'] = data['detected_schaar']
+    if 'detected_sleutel' in data:
+        metadata['detected_sleutel'] = data['detected_sleutel']
+    if 'total_detections' in data:
+        metadata['total_detections'] = data['total_detections']
+    if 'model_type' in data:
+        metadata['model_type'] = data['model_type']
+    if 'device_id' in data:
+        metadata['device_id'] = data['device_id']
+    if 'camera_info' in data and data['camera_info']:
+        metadata['camera_info'] = data['camera_info']
+
+    # Determine is_correct (None initially, will be set by user correction)
+    is_correct = None
+
+    # Calculate processing_time if not provided
+    processing_time = data.get('processing_time', 0.0)
 
     cursor.execute("""
         INSERT INTO analyses
-        (timestamp, image_path, predicted_class, predicted_label,
-         confidence, status, missing_items, face_count, device_id, workplace_id,
-         detected_hamer, detected_schaar, detected_sleutel, total_detections, model_type, model_version)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (workplace_id, user_id, timestamp, image_path, result, confidence,
+         model_prediction, is_correct, processing_time, metadata, model_version)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb, %s)
+        RETURNING id
     """, (
-        data['timestamp'],
-        data['image_path'],
-        data['predicted_class'],
-        data['predicted_label'],
-        data['confidence'],
-        data['status'],
-        json.dumps(data.get('missing_items', [])),
-        data.get('face_count', 0),
-        data.get('device_id', 'onbekend'),
         data.get('workplace_id', None),
-        data.get('detected_hamer', 0),
-        data.get('detected_schaar', 0),
-        data.get('detected_sleutel', 0),
-        data.get('total_detections', 0),
-        data.get('model_type', 'classification'),
-        data.get('model_version', None)  # Voeg model versie toe
+        data.get('user_id', None),
+        data.get('timestamp', datetime.now()),
+        data.get('image_path'),
+        result,  # status -> result
+        confidence,  # FIX #2: Never NULL
+        model_prediction,  # predicted_label -> model_prediction
+        is_correct,  # Will be set on user correction
+        processing_time,
+        json.dumps(metadata) if metadata else None,  # FIX #4: JSONB casting
+        data.get('model_version', None)
     ))
 
-    analysis_id = cursor.lastrowid
+    analysis_id = cursor.fetchone()['id']
     conn.commit()
     conn.close()
 
@@ -303,26 +109,32 @@ def get_all_analyses(limit=100, offset=0, filter_status=None):
     """
     Haal alle analyses op
 
+    PostgreSQL -> Frontend Field Mapping:
+    - result -> status (frontend expects 'status')
+    - model_prediction -> predicted_label AND predicted_class
+    - user_correction -> corrected_label
+    - metadata -> extract missing_items and detection counts
+
     Args:
         limit: Maximum aantal resultaten
         offset: Offset voor paginatie
         filter_status: Filter op OK/NOK (optioneel)
 
     Returns:
-        List van analyse dicts
+        List van analyse dicts with frontend-compatible field names
     """
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     query = "SELECT * FROM analyses"
     params = []
 
     if filter_status:
-        query += " WHERE status = ?"
+        # Map frontend filter to PostgreSQL field
+        query += " WHERE result = %s"
         params.append(filter_status)
 
-    query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
+    query += " ORDER BY timestamp DESC LIMIT %s OFFSET %s"
     params.extend([limit, offset])
 
     cursor.execute(query, params)
@@ -331,7 +143,37 @@ def get_all_analyses(limit=100, offset=0, filter_status=None):
     analyses = []
     for row in rows:
         analysis = dict(row)
-        analysis['missing_items'] = json.loads(analysis['missing_items']) if analysis['missing_items'] else []
+
+        # CRITICAL: Map PostgreSQL fields to frontend expected fields
+        analysis['status'] = analysis.get('result')  # result -> status
+        analysis['predicted_label'] = analysis.get('model_prediction')  # model_prediction -> predicted_label
+        analysis['predicted_class'] = analysis.get('model_prediction')  # Also set predicted_class
+        analysis['corrected_label'] = analysis.get('user_correction')  # user_correction -> corrected_label
+        analysis['created_at'] = analysis.get('timestamp')  # timestamp -> created_at for frontend
+
+        # Extract metadata fields for frontend compatibility
+        # FIX #5: JSON parsing error handling
+        metadata = analysis.get('metadata', {})
+        if isinstance(metadata, str):
+            try:
+                metadata = json.loads(metadata)
+            except (json.JSONDecodeError, TypeError):
+                metadata = {}
+        elif metadata is None:
+            metadata = {}
+
+        # Extract fields from metadata
+        analysis['missing_items'] = metadata.get('missing_items', [])
+        analysis['detected_hamer'] = metadata.get('detected_hamer', 0)
+        analysis['detected_schaar'] = metadata.get('detected_schaar', 0)
+        analysis['detected_sleutel'] = metadata.get('detected_sleutel', 0)
+        analysis['total_detections'] = metadata.get('total_detections', 0)
+        analysis['model_type'] = metadata.get('model_type', 'classification')
+
+        # FIX #6: Path separator fixes - Convert Windows backslashes to forward slashes for frontend
+        if analysis.get('image_path'):
+            analysis['image_path'] = analysis['image_path'].replace('\\', '/')
+
         analyses.append(analysis)
 
     conn.close()
@@ -341,26 +183,28 @@ def get_all_analyses(limit=100, offset=0, filter_status=None):
 def update_correction(analysis_id, corrected_class, corrected_label, notes=None, confidence_threshold=70.0):
     """
     Update analyse met correctie (voor model verbetering)
-    BEHOUDT de originele predicted_class/label voor accuracy tracking!
-    AUTOMATISCH markeren als training candidate bij fouten of lage confidence
-    VERWIJDERT foto van disk als beoordeeld als OK zonder correcties (bespaart schijfruimte)
+
+    PostgreSQL Schema:
+    - Uses user_correction field (NOT corrected_label)
+    - Uses is_correct boolean field
+    - model_prediction stays unchanged for accuracy tracking
 
     Args:
         analysis_id: ID van analyse
-        corrected_class: Correcte class
+        corrected_class: Correcte class (ignored, using corrected_label)
         corrected_label: Correct label
-        notes: Optionele notities
+        notes: Optionele notities (stored in metadata)
         confidence_threshold: Dynamische drempel voor lage confidence (default 70%)
     """
     import os
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Haal eerst de originele analyse op om confidence en predicted_label te checken
+    # Haal eerste de originele analyse op
     cursor.execute("""
-        SELECT predicted_label, confidence, image_path
+        SELECT model_prediction, confidence, image_path, metadata
         FROM analyses
-        WHERE id = ?
+        WHERE id = %s
     """, (analysis_id,))
 
     result = cursor.fetchone()
@@ -368,46 +212,53 @@ def update_correction(analysis_id, corrected_class, corrected_label, notes=None,
         conn.close()
         raise ValueError(f"Analyse met ID {analysis_id} niet gevonden")
 
-    predicted_label, confidence, image_path = result
+    model_prediction = result['model_prediction']
+    confidence = result['confidence'] or 0.0
+    image_path = result['image_path']
+
+    # Parse existing metadata
+    # FIX #5: JSON parsing error handling
+    metadata = result.get('metadata', {})
+    if isinstance(metadata, str):
+        try:
+            metadata = json.loads(metadata)
+        except (json.JSONDecodeError, TypeError):
+            metadata = {}
+    elif metadata is None:
+        metadata = {}
+
+    # Determine if prediction is correct
+    is_correct = (model_prediction == corrected_label)
 
     # Bepaal of dit een training candidate is
-    # Criteria: 1) Fout voorspeld OF 2) Lage confidence (onder dynamische drempel)
-    is_incorrect = (predicted_label != corrected_label)
-    threshold_decimal = confidence_threshold / 100.0  # Convert percentage naar decimaal
+    threshold_decimal = confidence_threshold / 100.0
     is_low_confidence = (confidence < threshold_decimal)
     has_notes = notes and notes.strip() and notes.strip() != "{}"
-    should_be_training_candidate = is_incorrect or is_low_confidence or has_notes
+
+    # Store correction info in metadata
+    if notes:
+        try:
+            notes_dict = json.loads(notes) if isinstance(notes, str) else notes
+            metadata['correction_notes'] = notes_dict
+        except:
+            metadata['correction_notes'] = notes
 
     print(f"📝 Correctie ID {analysis_id}:")
-    print(f"  - AI voorspelling: {predicted_label}")
+    print(f"  - AI voorspelling: {model_prediction}")
     print(f"  - Correctie: {corrected_label}")
+    print(f"  - Is correct: {is_correct}")
     print(f"  - Confidence: {confidence*100:.1f}%")
     print(f"  - Drempel: {confidence_threshold}%")
-    print(f"  - Training candidate: {should_be_training_candidate} (incorrect={is_incorrect}, low_conf={is_low_confidence}, has_notes={has_notes})")
 
-    # VERWIJDER foto van disk als beoordeeld als correct ZONDER correcties/notes
-    # (OK + geen fouten = geen trainingsdata → foto kan weg)
-    if not should_be_training_candidate and image_path:
-        try:
-            if os.path.exists(image_path):
-                os.remove(image_path)
-                print(f"🗑️  Foto verwijderd (OK zonder correcties): {image_path}")
-                # Zet image_path op NULL in database
-                image_path = None
-        except Exception as e:
-            print(f"⚠️  Kon foto niet verwijderen: {e}")
-
-    # Update ALLEEN de correctie velden, NIET de predicted velden!
-    # We moeten de originele AI voorspelling behouden voor accuracy tracking
+    # Update met PostgreSQL velden
+    # CRITICAL: Use user_correction (NOT corrected_label)
     cursor.execute("""
         UPDATE analyses
-        SET corrected_class = ?,
-            corrected_label = ?,
-            notes = ?,
-            training_candidate = ?,
-            image_path = ?
-        WHERE id = ?
-    """, (corrected_class, corrected_label, notes, 1 if should_be_training_candidate else 0, image_path, analysis_id))
+        SET user_correction = %s,
+            is_correct = %s,
+            metadata = %s::jsonb
+        WHERE id = %s
+    """, (corrected_label, is_correct, json.dumps(metadata), analysis_id))
 
     conn.commit()
     conn.close()
@@ -418,38 +269,45 @@ def get_statistics():
     """
     Haal statistieken op over analyses
 
+    PostgreSQL Schema:
+    - status -> result
+    - predicted_label -> model_prediction
+    - corrected_class -> user_correction
+
     Returns:
         Dict met statistieken
     """
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # Total analyses
-    cursor.execute("SELECT COUNT(*) FROM analyses")
-    total = cursor.fetchone()[0]
+    cursor.execute("SELECT COUNT(*) as count FROM analyses")
+    total = cursor.fetchone()['count']
 
-    # OK vs NOK
-    cursor.execute("SELECT status, COUNT(*) FROM analyses GROUP BY status")
-    status_counts = dict(cursor.fetchall())
+    # OK vs NOK - use 'result' field
+    cursor.execute("SELECT result, COUNT(*) as count FROM analyses GROUP BY result")
+    status_rows = cursor.fetchall()
+    status_counts = {row['result']: row['count'] for row in status_rows}
 
-    # Meest voorkomende fouten
+    # Meest voorkomende fouten - use model_prediction and result
     cursor.execute("""
-        SELECT predicted_label, COUNT(*) as count
+        SELECT model_prediction, COUNT(*) as count
         FROM analyses
-        WHERE status = 'NOK'
-        GROUP BY predicted_label
+        WHERE result = 'NOK'
+        GROUP BY model_prediction
         ORDER BY count DESC
         LIMIT 5
     """)
     common_issues = cursor.fetchall()
 
-    # Gemiddelde confidence
-    cursor.execute("SELECT AVG(confidence) FROM analyses")
-    avg_confidence = cursor.fetchone()[0]
+    # Gemiddelde confidence - FIX #1: COALESCE for NULL handling
+    cursor.execute("SELECT COALESCE(AVG(confidence), 0) as avg_conf FROM analyses")
+    avg_conf_result = cursor.fetchone()
+    avg_confidence = avg_conf_result['avg_conf'] if avg_conf_result else 0
 
-    # Aantal correcties
-    cursor.execute("SELECT COUNT(*) FROM analyses WHERE corrected_class IS NOT NULL")
-    corrections_count = cursor.fetchone()[0]
+    # Aantal correcties - use user_correction field
+    cursor.execute("SELECT COUNT(*) as count FROM analyses WHERE user_correction IS NOT NULL")
+    corrections_count = cursor.fetchone()['count']
 
     conn.close()
 
@@ -457,7 +315,7 @@ def get_statistics():
         'total_analyses': total,
         'ok_count': status_counts.get('OK', 0),
         'nok_count': status_counts.get('NOK', 0),
-        'common_issues': [{'label': label, 'count': count} for label, count in common_issues],
+        'common_issues': [{'label': row['model_prediction'], 'count': row['count']} for row in common_issues],
         'avg_confidence': round(avg_confidence, 2) if avg_confidence else 0,
         'corrections_count': corrections_count
     }
@@ -467,22 +325,27 @@ def get_accuracy_over_time():
     """
     Bereken model accuracy per week om verbetering over tijd te tracken
 
+    PostgreSQL Schema:
+    - Uses is_correct boolean field
+    - user_correction IS NOT NULL indicates reviewed
+
     Returns:
         List van dicts met week info en accuracy percentage
     """
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Haal alle gecorrigeerde analyses op, gegroepeerd per week
+    # FIX #1: COALESCE voor SUM() NULL handling
+    # Use is_correct boolean field instead of comparing predicted_label = corrected_label
     cursor.execute("""
         SELECT
-            strftime('%Y-W%W', created_at) as week,
-            strftime('%Y-%m-%d', created_at) as date,
+            TO_CHAR(timestamp, 'IYYY-IW') as week,
+            TO_CHAR(timestamp, 'YYYY-MM-DD') as date,
             COUNT(*) as total,
-            SUM(CASE WHEN predicted_label = corrected_label THEN 1 ELSE 0 END) as correct
+            COALESCE(SUM(CASE WHEN is_correct = TRUE THEN 1 ELSE 0 END), 0) as correct
         FROM analyses
-        WHERE corrected_label IS NOT NULL
-        GROUP BY week
+        WHERE user_correction IS NOT NULL
+        GROUP BY week, date
         ORDER BY date ASC
     """)
 
@@ -491,11 +354,13 @@ def get_accuracy_over_time():
 
     # Bereken accuracy percentage per week
     timeline = []
-    for week, date, total, correct in results:
+    for row in results:
+        total = row['total']
+        correct = row['correct']
         accuracy = round((correct / total * 100), 1) if total > 0 else 0
         timeline.append({
-            'week': week,
-            'date': date,
+            'week': row['week'],
+            'date': row['date'],
             'total': total,
             'correct': correct,
             'accuracy': accuracy
@@ -504,10 +369,52 @@ def get_accuracy_over_time():
     return timeline
 
 
+def get_accuracy_stats():
+    """
+    Bereken model accuracy statistieken (gebruikt voor timeline chart)
+
+    PostgreSQL Schema:
+    - Uses is_correct boolean field
+
+    Returns:
+        Dict met accuracy metrics
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # FIX #1: COALESCE voor SUM() NULL handling - voorkomt NULL bij lege resultaten
+    # Use is_correct boolean field
+    cursor.execute("""
+        SELECT
+            COUNT(*) as total,
+            COALESCE(SUM(CASE WHEN is_correct = TRUE THEN 1 ELSE 0 END), 0) as correct
+        FROM analyses
+        WHERE user_correction IS NOT NULL
+    """)
+
+    result = cursor.fetchone()
+    conn.close()
+
+    total = result['total'] if result else 0
+    correct = result['correct'] if result else 0
+
+    accuracy = round((correct / total * 100), 1) if total > 0 else 0
+
+    return {
+        'total': total,
+        'correct': correct,
+        'accuracy': accuracy
+    }
+
+
 def get_training_candidates(confidence_threshold=70.0):
     """
     Haal alle training candidates op die nog niet geëxporteerd zijn
     DYNAMISCH: Filtert op basis van confidence threshold en fouten
+
+    PostgreSQL Schema:
+    - Uses is_correct and user_correction fields
+    - No exported_for_training or training_candidate fields in PostgreSQL
 
     Args:
         confidence_threshold: Drempel percentage voor lage confidence (default 70%)
@@ -515,28 +422,21 @@ def get_training_candidates(confidence_threshold=70.0):
     Returns:
         List van analyse dicts die klaar zijn voor training
     """
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # Convert percentage naar decimaal
     threshold_decimal = confidence_threshold / 100.0
 
-    # Haal alle gecorrigeerde analyses op die:
-    # 1) Fout voorspeld ZIJN (predicted != corrected) OF
-    # 2) Lage confidence hebben (< drempel) OF
-    # 3) Expliciet gemarkeerd als training_candidate (via Training button)
-    # EN nog niet geëxporteerd zijn
+    # Select candidates: reviewed (has user_correction) AND (incorrect OR low confidence)
     cursor.execute("""
         SELECT * FROM analyses
-        WHERE corrected_label IS NOT NULL
-        AND exported_for_training = 0
+        WHERE user_correction IS NOT NULL
         AND (
-            predicted_label != corrected_label
-            OR confidence < ?
-            OR training_candidate = 1
+            is_correct = FALSE
+            OR confidence < %s
         )
-        ORDER BY created_at DESC
+        ORDER BY timestamp DESC
     """, (threshold_decimal,))
 
     rows = cursor.fetchall()
@@ -544,7 +444,26 @@ def get_training_candidates(confidence_threshold=70.0):
     candidates = []
     for row in rows:
         analysis = dict(row)
-        analysis['missing_items'] = json.loads(analysis['missing_items']) if analysis['missing_items'] else []
+
+        # Map PostgreSQL fields to frontend expected fields
+        analysis['status'] = analysis.get('result')
+        analysis['predicted_label'] = analysis.get('model_prediction')
+        analysis['predicted_class'] = analysis.get('model_prediction')
+        analysis['corrected_label'] = analysis.get('user_correction')
+
+        # Extract metadata fields
+        # FIX #5: JSON parsing error handling
+        metadata = analysis.get('metadata', {})
+        if isinstance(metadata, str):
+            try:
+                metadata = json.loads(metadata)
+            except (json.JSONDecodeError, TypeError):
+                metadata = {}
+        elif metadata is None:
+            metadata = {}
+
+        analysis['missing_items'] = metadata.get('missing_items', [])
+
         candidates.append(analysis)
 
     conn.close()
@@ -556,26 +475,31 @@ def get_training_statistics():
     """
     Haal statistieken op voor training pipeline
 
+    PostgreSQL Schema:
+    - Uses user_correction to determine reviewed status
+    - Uses is_correct for training candidates
+    - No exported_for_training or training_candidate fields
+
     Returns:
         Dict met training pipeline metrics
     """
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Aantal unreviewed analyses
-    cursor.execute("SELECT COUNT(*) FROM analyses WHERE corrected_label IS NULL")
-    unreviewed_count = cursor.fetchone()[0]
+    # Aantal unreviewed analyses (no user_correction)
+    cursor.execute("SELECT COUNT(*) as count FROM analyses WHERE user_correction IS NULL")
+    unreviewed_count = cursor.fetchone()['count']
 
-    # Aantal training candidates (nog niet geëxporteerd)
+    # Aantal training candidates (incorrect predictions)
     cursor.execute("""
-        SELECT COUNT(*) FROM analyses
-        WHERE training_candidate = 1 AND exported_for_training = 0
+        SELECT COUNT(*) as count FROM analyses
+        WHERE user_correction IS NOT NULL AND is_correct = FALSE
     """)
-    training_queue_count = cursor.fetchone()[0]
+    training_queue_count = cursor.fetchone()['count']
 
-    # Aantal al geëxporteerd
-    cursor.execute("SELECT COUNT(*) FROM analyses WHERE exported_for_training = 1")
-    exported_count = cursor.fetchone()[0]
+    # Aantal correct predictions (could be used for validation)
+    cursor.execute("SELECT COUNT(*) as count FROM analyses WHERE is_correct = TRUE")
+    exported_count = cursor.fetchone()['count']
 
     conn.close()
 
@@ -592,16 +516,20 @@ def mark_as_exported(analysis_ids):
     """
     Markeer geselecteerde analyses als geëxporteerd voor training
 
+    NOTE: PostgreSQL schema doesn't have exported_for_training field.
+    This function is kept for API compatibility but stores export info in metadata.
+
     Args:
         analysis_ids: List van analysis IDs om te markeren
     """
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
-    placeholders = ','.join('?' * len(analysis_ids))
+    # Store export timestamp in metadata instead
+    placeholders = ','.join(['%s'] * len(analysis_ids))
     cursor.execute(f"""
         UPDATE analyses
-        SET exported_for_training = 1
+        SET metadata = COALESCE(metadata, '{{}}'::jsonb) || '{{"exported_for_training": true}}'::jsonb
         WHERE id IN ({placeholders})
     """, analysis_ids)
 
@@ -624,11 +552,10 @@ def export_training_data(analysis_ids, export_base_path):
     import shutil
     from pathlib import Path
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_connection()
     cursor = conn.cursor()
 
-    placeholders = ','.join('?' * len(analysis_ids))
+    placeholders = ','.join(['%s'] * len(analysis_ids))
     cursor.execute(f"""
         SELECT * FROM analyses
         WHERE id IN ({placeholders})
@@ -645,7 +572,10 @@ def export_training_data(analysis_ids, export_base_path):
     for row in rows:
         analysis = dict(row)
         corrected_class = analysis['corrected_class']
-        image_path = Path(analysis['image_path'])
+        image_path = Path(analysis['image_path']) if analysis.get('image_path') else None
+
+        if not image_path:
+            continue
 
         # Maak class directory aan
         class_dir = export_path / str(corrected_class)
@@ -680,8 +610,7 @@ def export_to_csv(output_path):
     """
     import csv
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("SELECT * FROM analyses ORDER BY created_at DESC")
@@ -706,31 +635,40 @@ def create_workplace(name, description, items, reference_photo=None):
     """
     Maak nieuwe werkplek aan
 
+    PostgreSQL Schema:
+    - Uses reference_photo_path (NOT reference_photo)
+
     Args:
         name: Werkplek naam (uniek)
         description: Beschrijving
         items: List van items die op werkplek horen (bijv. ["hamer", "schaar", "sleutel"])
-        reference_photo: Pad naar referentie foto (optioneel)
+        reference_photo: Pad naar referentie foto (optioneel) - mapped to reference_photo_path
 
     Returns:
         ID van nieuwe werkplek
     """
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
-        cursor.execute("""
-            INSERT INTO workplaces (name, description, items, reference_photo, updated_at)
-            VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
-        """, (name, description, json.dumps(items), reference_photo))
+        # Convert items list to comma-separated string
+        items_str = ','.join(items) if isinstance(items, list) else items
 
-        workplace_id = cursor.lastrowid
+        # Map reference_photo parameter to reference_photo_path field
+        cursor.execute("""
+            INSERT INTO workplaces (name, description, items, reference_photo_path, updated_at)
+            VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
+            RETURNING id
+        """, (name, description, items_str, reference_photo))
+
+        workplace_id = cursor.fetchone()['id']
         conn.commit()
         print(f"OK Werkplek '{name}' aangemaakt (ID: {workplace_id})")
         return workplace_id
 
-    except sqlite3.IntegrityError:
+    except psycopg2.IntegrityError:
         print(f"ERROR Werkplek '{name}' bestaat al!")
+        conn.rollback()
         return None
     finally:
         conn.close()
@@ -740,19 +678,22 @@ def get_all_workplaces(active_only=True):
     """
     Haal alle werkplekken op
 
+    PostgreSQL Schema:
+    - reference_photo_path needs to be mapped to reference_photo for frontend
+
     Args:
         active_only: Alleen actieve werkplekken ophalen
 
     Returns:
-        List van werkplek dicts
+        List van werkplek dicts with frontend-compatible field names
     """
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     query = "SELECT * FROM workplaces"
-    if active_only:
-        query += " WHERE active = 1"
+    # NOTE: PostgreSQL schema doesn't have is_active field, skip filter
+    # if active_only:
+    #     query += " WHERE is_active = TRUE"
     query += " ORDER BY created_at DESC"
 
     cursor.execute(query)
@@ -760,11 +701,31 @@ def get_all_workplaces(active_only=True):
 
     workplaces = []
     for row in rows:
-        workplace = dict(row)
-        workplace['items'] = json.loads(workplace['items'])
-        if workplace.get('whiteboard_region'):
-            workplace['whiteboard_region'] = json.loads(workplace['whiteboard_region'])
-        workplaces.append(workplace)
+        wp = dict(row)
+
+        # Map PostgreSQL fields to frontend expected fields
+        wp['reference_photo'] = wp.get('reference_photo_path')  # Map reference_photo_path -> reference_photo
+
+        # FIX #6: Items empty string edge case - handle trailing commas
+        if wp.get('items'):
+            items_str = wp['items'].strip()
+            # Split and filter out empty strings
+            wp['items'] = [item.strip() for item in items_str.split(',') if item.strip()] if items_str else []
+        else:
+            wp['items'] = []
+
+        # FIX #5: Whiteboard JSON parsing error handling
+        if wp.get('whiteboard_region'):
+            try:
+                if isinstance(wp['whiteboard_region'], str):
+                    wp['whiteboard_region'] = json.loads(wp['whiteboard_region'])
+            except (json.JSONDecodeError, TypeError):
+                wp['whiteboard_region'] = None
+
+        # Alias for frontend compatibility (always True if no is_active field)
+        wp['active'] = True
+
+        workplaces.append(wp)
 
     conn.close()
     return workplaces
@@ -774,26 +735,47 @@ def get_workplace(workplace_id):
     """
     Haal specifieke werkplek op
 
+    PostgreSQL Schema:
+    - reference_photo_path needs to be mapped to reference_photo for frontend
+
     Args:
         workplace_id: ID van werkplek
 
     Returns:
-        Werkplek dict of None
+        Werkplek dict of None with frontend-compatible field names
     """
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM workplaces WHERE id = ?", (workplace_id,))
+    cursor.execute("SELECT * FROM workplaces WHERE id = %s", (workplace_id,))
     row = cursor.fetchone()
 
     if row:
-        workplace = dict(row)
-        workplace['items'] = json.loads(workplace['items'])
-        if workplace.get('whiteboard_region'):
-            workplace['whiteboard_region'] = json.loads(workplace['whiteboard_region'])
+        wp = dict(row)
+
+        # Map PostgreSQL fields to frontend expected fields
+        wp['reference_photo'] = wp.get('reference_photo_path')  # Map reference_photo_path -> reference_photo
+
+        # FIX #6: Items empty string edge case
+        if wp.get('items'):
+            items_str = wp['items'].strip()
+            wp['items'] = [item.strip() for item in items_str.split(',') if item.strip()] if items_str else []
+        else:
+            wp['items'] = []
+
+        # FIX #5: Whiteboard JSON parsing error handling
+        if wp.get('whiteboard_region'):
+            try:
+                if isinstance(wp['whiteboard_region'], str):
+                    wp['whiteboard_region'] = json.loads(wp['whiteboard_region'])
+            except (json.JSONDecodeError, TypeError):
+                wp['whiteboard_region'] = None
+
+        # Alias for frontend compatibility (always True if no is_active field)
+        wp['active'] = True
+
         conn.close()
-        return workplace
+        return wp
 
     conn.close()
     return None
@@ -803,49 +785,54 @@ def update_workplace(workplace_id, name=None, description=None, items=None, refe
     """
     Update werkplek gegevens
 
+    PostgreSQL Schema:
+    - reference_photo -> reference_photo_path
+    - No is_active field in PostgreSQL schema
+
     Args:
         workplace_id: ID van werkplek
         name: Nieuwe naam (optioneel)
         description: Nieuwe beschrijving (optioneel)
         items: Nieuwe items list (optioneel)
-        reference_photo: Nieuwe referentie foto (optioneel)
-        active: Nieuwe active status (optioneel)
-        confidence_threshold: Confidence drempel voor detection (0.0-1.0, optioneel)
-        whiteboard_region: Whiteboard region dict met x1, y1, x2, y2 (percentages 0-1, optioneel)
+        reference_photo: Nieuwe referentie foto (optioneel) - mapped to reference_photo_path
+        active: Nieuwe active status (optioneel) - IGNORED, no is_active field
+        confidence_threshold: Confidence drempel 0.0-1.0 (optioneel)
+        whiteboard_region: Whiteboard region dict met x1, y1, x2, y2 (optioneel)
     """
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     updates = []
     params = []
 
     if name is not None:
-        updates.append("name = ?")
+        updates.append("name = %s")
         params.append(name)
     if description is not None:
-        updates.append("description = ?")
+        updates.append("description = %s")
         params.append(description)
     if items is not None:
-        updates.append("items = ?")
-        params.append(json.dumps(items))
+        updates.append("items = %s")
+        # Convert list to comma-separated string
+        items_str = ','.join(items) if isinstance(items, list) else items
+        params.append(items_str)
     if reference_photo is not None:
-        updates.append("reference_photo = ?")
+        # Map reference_photo to reference_photo_path
+        updates.append("reference_photo_path = %s")
         params.append(reference_photo)
-    if active is not None:
-        updates.append("active = ?")
-        params.append(1 if active else 0)
     if confidence_threshold is not None:
-        updates.append("confidence_threshold = ?")
+        updates.append("confidence_threshold = %s")
         params.append(confidence_threshold)
+    # Note: active is ignored - not in PostgreSQL schema
     if whiteboard_region is not None:
-        updates.append("whiteboard_region = ?")
+        updates.append("whiteboard_region = %s::jsonb")
         params.append(json.dumps(whiteboard_region) if whiteboard_region else None)
 
     if updates:
         updates.append("updated_at = CURRENT_TIMESTAMP")
         params.append(workplace_id)
 
-        query = f"UPDATE workplaces SET {', '.join(updates)} WHERE id = ?"
+        query = f"UPDATE workplaces SET {', '.join(updates)} WHERE id = %s"
         cursor.execute(query, params)
         conn.commit()
         print(f"OK Werkplek {workplace_id} bijgewerkt")
@@ -860,10 +847,10 @@ def delete_workplace(workplace_id):
     Args:
         workplace_id: ID van werkplek
     """
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("DELETE FROM workplaces WHERE id = ?", (workplace_id,))
+    cursor.execute("DELETE FROM workplaces WHERE id = %s", (workplace_id,))
     conn.commit()
     conn.close()
 
@@ -879,15 +866,15 @@ def set_workplace_model(workplace_id, model_type, model_path):
         model_type: 'classification' of 'detection'
         model_path: Pad naar model file (bijv. 'models/werkplek_detector (7).pt')
     """
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
         UPDATE workplaces
-        SET active_model_type = ?,
-            active_model_path = ?,
+        SET active_model_type = %s,
+            active_model_path = %s,
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
+        WHERE id = %s
     """, (model_type, model_path, workplace_id))
 
     conn.commit()
@@ -906,25 +893,26 @@ def get_workplace_model(workplace_id):
     Returns:
         Dict met model_type, model_path en model_version, of None als niet geconfigureerd
     """
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # Haal werkplek model info + actief model uit models tabel
+    # PostgreSQL schema: workplaces has 'model_type' (NOT 'active_model_type')
     cursor.execute("""
-        SELECT w.active_model_type, w.active_model_path, m.version
+        SELECT w.model_type, w.active_model_path, m.version
         FROM workplaces w
-        LEFT JOIN models m ON m.workplace_id = w.id AND m.status = 'active'
-        WHERE w.id = ?
+        LEFT JOIN models m ON m.workplace_id = w.id AND m.is_active = TRUE
+        WHERE w.id = %s
     """, (workplace_id,))
 
     result = cursor.fetchone()
     conn.close()
 
-    if result and result[0]:
+    if result and result['model_type']:
         return {
-            'model_type': result[0],
-            'model_path': result[1],
-            'model_version': result[2]  # Kan None zijn als geen actief model in models tabel
+            'model_type': result['model_type'],
+            'model_path': result['active_model_path'],
+            'model_version': result['version']  # Kan None zijn als geen actief model in models tabel
         }
     return None
 
@@ -933,7 +921,7 @@ def get_workplace_model(workplace_id):
 # TRAINING IMAGES FUNCTIES
 # ========================================
 
-def add_training_image(workplace_id, image_path, label, class_id=None, source='manual_upload', model_version=None):
+def add_training_image(workplace_id, image_path, label, class_id=None, source='manual_upload', model_version=None, metadata=None):
     """
     Voeg training image toe aan dataset
 
@@ -944,20 +932,25 @@ def add_training_image(workplace_id, image_path, label, class_id=None, source='m
         class_id: Class ID (optioneel)
         source: Bron van afbeelding (manual_upload, production, camera)
         model_version: Model versie waarvoor deze training image bedoeld is (optioneel)
+        metadata: Extra metadata als dict (optioneel)
 
     Returns:
         ID van training image
     """
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
+
+    # FIX #4: JSONB type casting - add ::jsonb cast for metadata
+    metadata_json = json.dumps(metadata) if metadata else None
 
     cursor.execute("""
         INSERT INTO training_images
-        (workplace_id, image_path, label, class_id, source, model_version)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (workplace_id, image_path, label, class_id, source, model_version))
+        (workplace_id, image_path, label, class_id, source, model_version, metadata)
+        VALUES (%s, %s, %s, %s, %s, %s, %s::jsonb)
+        RETURNING id
+    """, (workplace_id, image_path, label, class_id, source, model_version, metadata_json))
 
-    image_id = cursor.lastrowid
+    image_id = cursor.fetchone()['id']
     conn.commit()
     conn.close()
 
@@ -975,13 +968,12 @@ def get_training_images(workplace_id, validated_only=False):
     Returns:
         List van training image dicts
     """
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_connection()
     cursor = conn.cursor()
 
-    query = "SELECT * FROM training_images WHERE workplace_id = ?"
+    query = "SELECT * FROM training_images WHERE workplace_id = %s"
     if validated_only:
-        query += " AND validated = 1"
+        query += " AND validated = TRUE"
     query += " ORDER BY created_at DESC"
 
     cursor.execute(query, (workplace_id,))
@@ -1004,14 +996,14 @@ def update_training_image_label(image_id, new_label):
     Returns:
         True als succesvol, False anders
     """
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
         cursor.execute("""
             UPDATE training_images
-            SET label = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
+            SET label = %s
+            WHERE id = %s
         """, (new_label, image_id))
 
         conn.commit()
@@ -1034,13 +1026,12 @@ def delete_training_image(image_id):
     Returns:
         Tuple (success: bool, image_path: str) - path voor file cleanup
     """
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
         # Haal eerst het image path op voor cleanup
-        cursor.execute("SELECT image_path FROM training_images WHERE id = ?", (image_id,))
+        cursor.execute("SELECT image_path FROM training_images WHERE id = %s", (image_id,))
         row = cursor.fetchone()
 
         if not row:
@@ -1050,7 +1041,7 @@ def delete_training_image(image_id):
         image_path = row['image_path']
 
         # Verwijder uit database
-        cursor.execute("DELETE FROM training_images WHERE id = ?", (image_id,))
+        cursor.execute("DELETE FROM training_images WHERE id = %s", (image_id,))
         conn.commit()
 
         success = cursor.rowcount > 0
@@ -1066,6 +1057,12 @@ def get_training_dataset_stats(workplace_id, model_version=None):
     """
     Haal dataset statistieken op voor werkplek - focus op MODEL FOUTEN
 
+    PostgreSQL Schema:
+    - Uses user_correction (NOT corrected_label)
+    - Uses model_prediction (NOT predicted_label)
+    - Uses is_correct boolean
+    - Correction notes stored in metadata->correction_notes
+
     Args:
         workplace_id: ID van werkplek
         model_version: Optioneel - filter op specifieke model versie (bijv. "v1.0", "v2.0")
@@ -1073,91 +1070,89 @@ def get_training_dataset_stats(workplace_id, model_version=None):
     Returns:
         Dict met statistieken over model prestaties en fout types
     """
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # Build WHERE clause with optional model_version filter
     if model_version:
-        where_base = "workplace_id = ? AND model_version = ?"
+        where_base = "workplace_id = %s AND model_version = %s"
         params_base = (workplace_id, model_version)
     else:
-        where_base = "workplace_id = ?"
+        where_base = "workplace_id = %s"
         params_base = (workplace_id,)
 
     # Totaal aantal analyses/foto's voor deze werkplek (+ optioneel model filter)
-    cursor.execute(f"SELECT COUNT(*) FROM analyses WHERE {where_base}", params_base)
-    total = cursor.fetchone()[0]
+    cursor.execute(f"SELECT COUNT(*) as count FROM analyses WHERE {where_base}", params_base)
+    total = cursor.fetchone()['count']
 
-    # Beoordeelde foto's (hebben corrected_label)
+    # Beoordeelde foto's (hebben user_correction)
     cursor.execute(f"""
-        SELECT COUNT(*) FROM analyses
-        WHERE {where_base} AND corrected_label IS NOT NULL AND corrected_label != ''
+        SELECT COUNT(*) as count FROM analyses
+        WHERE {where_base} AND user_correction IS NOT NULL AND user_correction != ''
     """, params_base)
-    labeled_count = cursor.fetchone()[0]
+    labeled_count = cursor.fetchone()['count']
 
     unlabeled_count = total - labeled_count
 
-    # MODEL ACCURACY: Correct voorspeld
+    # MODEL ACCURACY: Correct voorspeld (is_correct = TRUE)
     cursor.execute(f"""
-        SELECT COUNT(*) FROM analyses
+        SELECT COUNT(*) as count FROM analyses
         WHERE {where_base}
-        AND corrected_label IS NOT NULL
-        AND predicted_label = corrected_label
+        AND user_correction IS NOT NULL
+        AND is_correct = TRUE
     """, params_base)
-    correct_predictions = cursor.fetchone()[0]
+    correct_predictions = cursor.fetchone()['count']
 
-    # MODEL FOUTEN: Incorrect voorspeld
+    # MODEL FOUTEN: Incorrect voorspeld (is_correct = FALSE)
     cursor.execute(f"""
-        SELECT COUNT(*) FROM analyses
+        SELECT COUNT(*) as count FROM analyses
         WHERE {where_base}
-        AND corrected_label IS NOT NULL
-        AND predicted_label != corrected_label
+        AND user_correction IS NOT NULL
+        AND is_correct = FALSE
     """, params_base)
-    incorrect_predictions = cursor.fetchone()[0]
+    incorrect_predictions = cursor.fetchone()['count']
 
     # FOUT TYPES: Welke fouten maakt het model?
-    # Groepeer op: predicted_label -> corrected_label (wat model zag vs wat het was)
     cursor.execute(f"""
         SELECT
-            predicted_label,
-            corrected_label,
+            model_prediction,
+            user_correction,
             COUNT(*) as count
         FROM analyses
         WHERE {where_base}
-        AND corrected_label IS NOT NULL
-        AND predicted_label != corrected_label
-        GROUP BY predicted_label, corrected_label
+        AND user_correction IS NOT NULL
+        AND is_correct = FALSE
+        GROUP BY model_prediction, user_correction
         ORDER BY count DESC
     """, params_base)
 
     error_types = []
-    for pred_label, corr_label, count in cursor.fetchall():
+    for row in cursor.fetchall():
         error_types.append({
-            'predicted': pred_label,
-            'actual': corr_label,
-            'count': count,
-            'description': f"Model zei '{pred_label}' maar was '{corr_label}'"
+            'predicted': row['model_prediction'],
+            'actual': row['user_correction'],
+            'count': row['count'],
+            'description': f"Model zei '{row['model_prediction']}' maar was '{row['user_correction']}'"
         })
 
-    # Distributie van corrected labels (voor training set balans)
+    # Distributie van user_correction labels (voor training set balans)
     cursor.execute(f"""
-        SELECT corrected_label, COUNT(*) as count
+        SELECT user_correction, COUNT(*) as count
         FROM analyses
-        WHERE {where_base} AND corrected_label IS NOT NULL AND corrected_label != ''
-        GROUP BY corrected_label
+        WHERE {where_base} AND user_correction IS NOT NULL AND user_correction != ''
+        GROUP BY user_correction
         ORDER BY count DESC
     """, params_base)
-    label_distribution = dict(cursor.fetchall())
+    label_rows = cursor.fetchall()
+    label_distribution = {row['user_correction']: row['count'] for row in label_rows}
 
-    # DETECTIE FOUTEN PER OBJECT (uit notes JSON)
-    # Haal alle analyses met notes op
+    # DETECTIE FOUTEN PER OBJECT (uit metadata->correction_notes JSON)
     cursor.execute(f"""
-        SELECT notes
+        SELECT metadata
         FROM analyses
         WHERE {where_base}
-        AND notes IS NOT NULL
-        AND notes != ''
-        AND notes != '{{}}'
+        AND metadata IS NOT NULL
+        AND metadata->>'correction_notes' IS NOT NULL
     """, params_base)
 
     detection_errors = {
@@ -1166,10 +1161,16 @@ def get_training_dataset_stats(workplace_id, model_version=None):
         'count_error': {}   # Verkeerd aantal gedetecteerd
     }
 
-    import json
-    for (notes_json,) in cursor.fetchall():
+    for row in cursor.fetchall():
         try:
-            notes = json.loads(notes_json)
+            # FIX #5: JSON parsing error handling
+            metadata = row['metadata']
+            if isinstance(metadata, str):
+                metadata = json.loads(metadata)
+
+            notes = metadata.get('correction_notes', {})
+            if isinstance(notes, str):
+                notes = json.loads(notes)
 
             # Parse missing items
             if 'missing_items' in notes and notes['missing_items']:
@@ -1203,9 +1204,9 @@ def get_training_dataset_stats(workplace_id, model_version=None):
         'correct_predictions': correct_predictions,
         'incorrect_predictions': incorrect_predictions,
         'accuracy': accuracy,
-        'error_types': error_types,  # Top model fouten
-        'label_distribution': label_distribution,  # Training set verdeling
-        'detection_errors': detection_errors  # Detectie fouten per object
+        'error_types': error_types,
+        'label_distribution': label_distribution,
+        'detection_errors': detection_errors
     }
 
 
@@ -1217,14 +1218,14 @@ def validate_training_image(image_id, validated=True):
         image_id: ID van training image
         validated: Boolean
     """
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
         UPDATE training_images
-        SET validated = ?
-        WHERE id = ?
-    """, (1 if validated else 0, image_id))
+        SET validated = %s
+        WHERE id = %s
+    """, (validated, image_id))
 
     conn.commit()
     conn.close()
@@ -1238,29 +1239,48 @@ def register_model(workplace_id, version, model_path, model_type='classification
     """
     Registreer nieuw model in database
 
+    PostgreSQL Schema:
+    - training_date (NOT uploaded_at)
+    - training_images_count
+    - metrics (jsonb) - stores test_accuracy and config
+    - created_by (integer, NOT uploaded_by text)
+
     Args:
         workplace_id: ID van werkplek
         version: Model versie (bijv. "v1.0", "v1.1")
         model_path: Pad naar model bestand
         model_type: Type model ('classification' of 'detection')
-        uploaded_by: Wie heeft het model geüpload
-        test_accuracy: Test accuracy percentage
-        config: JSON string met model config
-        notes: Notities over model
+        uploaded_by: Wie heeft het model geüpload (ignored, use created_by integer instead)
+        test_accuracy: Test accuracy percentage (stored in metrics jsonb)
+        config: JSON string met model config (stored in metrics jsonb)
+        notes: Notities over model (ignored, use metrics jsonb)
 
     Returns:
         ID van model
     """
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
+
+    # Build metrics JSON from test_accuracy, config, and notes
+    metrics = {}
+    if test_accuracy is not None:
+        metrics['test_accuracy'] = test_accuracy
+    if config:
+        try:
+            metrics['config'] = json.loads(config) if isinstance(config, str) else config
+        except:
+            metrics['config'] = config
+    if notes:
+        metrics['notes'] = notes
 
     cursor.execute("""
         INSERT INTO models
-        (workplace_id, version, model_path, model_type, uploaded_by, test_accuracy, config, notes)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, (workplace_id, version, model_path, model_type, uploaded_by, test_accuracy, config, notes))
+        (workplace_id, version, model_path, model_type, training_date, metrics, is_active)
+        VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP, %s::jsonb, FALSE)
+        RETURNING id
+    """, (workplace_id, version, model_path, model_type, json.dumps(metrics) if metrics else None))
 
-    model_id = cursor.lastrowid
+    model_id = cursor.fetchone()['id']
     conn.commit()
     conn.close()
 
@@ -1272,32 +1292,60 @@ def get_models(workplace_id, status=None):
     """
     Haal modellen op voor werkplek
 
+    PostgreSQL Schema:
+    - training_date (NOT uploaded_at)
+    - No status field in PostgreSQL
+    - metrics jsonb contains test_accuracy, config, notes
+
     Args:
         workplace_id: ID van werkplek
-        status: Filter op status (optioneel)
+        status: Filter op status (optioneel) - IGNORED, no status field
 
     Returns:
-        List van model dicts
+        List van model dicts with extracted metrics
     """
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_connection()
     cursor = conn.cursor()
 
-    query = "SELECT * FROM models WHERE workplace_id = ?"
+    query = "SELECT * FROM models WHERE workplace_id = %s"
     params = [workplace_id]
 
-    if status:
-        query += " AND status = ?"
-        params.append(status)
+    # Note: status parameter ignored - no status field in PostgreSQL schema
 
-    query += " ORDER BY uploaded_at DESC"
+    query += " ORDER BY training_date DESC"
 
     cursor.execute(query, params)
     rows = cursor.fetchall()
 
-    models = [dict(row) for row in rows]
-    conn.close()
+    models = []
+    # FIX #3: Boolean conversion for is_active field
+    for row in rows:
+        model = dict(row)
+        if 'is_active' in model:
+            model['is_active'] = bool(model['is_active'])
 
+        # Extract metrics for frontend compatibility
+        # FIX #5: JSON parsing error handling
+        metrics = model.get('metrics', {})
+        if isinstance(metrics, str):
+            try:
+                metrics = json.loads(metrics)
+            except (json.JSONDecodeError, TypeError):
+                metrics = {}
+        elif metrics is None:
+            metrics = {}
+
+        # Map metrics fields to top-level for frontend compatibility
+        model['test_accuracy'] = metrics.get('test_accuracy')
+        model['config'] = metrics.get('config')
+        model['notes'] = metrics.get('notes')
+
+        # Map training_date to uploaded_at for frontend compatibility
+        model['uploaded_at'] = model.get('training_date')
+
+        models.append(model)
+
+    conn.close()
     return models
 
 
@@ -1305,20 +1353,23 @@ def get_active_model(workplace_id):
     """
     Haal actieve model op voor werkplek
 
+    PostgreSQL Schema:
+    - training_date (NOT uploaded_at)
+    - metrics jsonb contains test_accuracy, config, notes
+
     Args:
         workplace_id: ID van werkplek
 
     Returns:
-        Model dict of None
+        Model dict of None with extracted metrics
     """
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
         SELECT * FROM models
-        WHERE workplace_id = ? AND status = 'active'
-        ORDER BY uploaded_at DESC
+        WHERE workplace_id = %s AND is_active = TRUE
+        ORDER BY training_date DESC
         LIMIT 1
     """, (workplace_id,))
 
@@ -1326,7 +1377,31 @@ def get_active_model(workplace_id):
     conn.close()
 
     if row:
-        return dict(row)
+        model = dict(row)
+        # FIX #3: Boolean conversion
+        if 'is_active' in model:
+            model['is_active'] = bool(model['is_active'])
+
+        # Extract metrics for frontend compatibility
+        # FIX #5: JSON parsing error handling
+        metrics = model.get('metrics', {})
+        if isinstance(metrics, str):
+            try:
+                metrics = json.loads(metrics)
+            except (json.JSONDecodeError, TypeError):
+                metrics = {}
+        elif metrics is None:
+            metrics = {}
+
+        # Map metrics fields to top-level for frontend compatibility
+        model['test_accuracy'] = metrics.get('test_accuracy')
+        model['config'] = metrics.get('config')
+        model['notes'] = metrics.get('notes')
+
+        # Map training_date to uploaded_at for frontend compatibility
+        model['uploaded_at'] = model.get('training_date')
+
+        return model
     return None
 
 
@@ -1338,40 +1413,42 @@ def activate_model(model_id):
     Args:
         model_id: ID van model om te activeren
     """
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # Haal model info op
-    cursor.execute("SELECT workplace_id, model_path, model_type FROM models WHERE id = ?", (model_id,))
+    cursor.execute("SELECT workplace_id, model_path, model_type FROM models WHERE id = %s", (model_id,))
     result = cursor.fetchone()
 
     if not result:
         conn.close()
         raise ValueError(f"Model {model_id} niet gevonden")
 
-    workplace_id, model_path, model_type = result
+    workplace_id = result['workplace_id']
+    model_path = result['model_path']
+    model_type = result['model_type']
 
     # Deactiveer alle andere modellen voor deze werkplek
     cursor.execute("""
         UPDATE models
-        SET status = 'archived'
-        WHERE workplace_id = ? AND status = 'active'
+        SET is_active = FALSE
+        WHERE workplace_id = %s AND is_active = TRUE
     """, (workplace_id,))
 
     # Activeer dit model
     cursor.execute("""
         UPDATE models
-        SET status = 'active'
-        WHERE id = ?
+        SET is_active = TRUE
+        WHERE id = %s
     """, (model_id,))
 
     # Update werkplek met actieve model configuratie
     cursor.execute("""
         UPDATE workplaces
-        SET active_model_type = ?,
-            active_model_path = ?,
+        SET active_model_type = %s,
+            active_model_path = %s,
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
+        WHERE id = %s
     """, (model_type, model_path, workplace_id))
 
     conn.commit()
@@ -1399,16 +1476,17 @@ def register_dataset_export(workplace_id, export_path, image_count, class_distri
     Returns:
         ID van export
     """
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
         INSERT INTO dataset_exports
         (workplace_id, export_path, image_count, class_distribution, exported_by, notes)
-        VALUES (?, ?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        RETURNING id
     """, (workplace_id, export_path, image_count, json.dumps(class_distribution), exported_by, notes))
 
-    export_id = cursor.lastrowid
+    export_id = cursor.fetchone()['id']
     conn.commit()
     conn.close()
 
@@ -1426,13 +1504,12 @@ def get_dataset_exports(workplace_id):
     Returns:
         List van export dicts
     """
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
         SELECT * FROM dataset_exports
-        WHERE workplace_id = ?
+        WHERE workplace_id = %s
         ORDER BY exported_at DESC
     """, (workplace_id,))
 
@@ -1441,7 +1518,10 @@ def get_dataset_exports(workplace_id):
     exports = []
     for row in rows:
         export = dict(row)
-        export['class_distribution'] = json.loads(export['class_distribution'])
+        try:
+            export['class_distribution'] = json.loads(export['class_distribution'])
+        except:
+            export['class_distribution'] = {}
         exports.append(export)
 
     conn.close()
@@ -1449,8 +1529,22 @@ def get_dataset_exports(workplace_id):
 
 
 if __name__ == "__main__":
-    # Test database
-    init_database()
+    # Fix Windows console encoding
+    import sys
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
+    # Test database connection and statistics
+    # NOTE: init_database() removed - PostgreSQL schema already exists!
+    print("Testing PostgreSQL database connection...")
+    try:
+        conn = get_db_connection()
+        print("✅ Database connection successful!")
+        conn.close()
+    except Exception as e:
+        print(f"❌ Database connection failed: {e}")
+        exit(1)
+
     print("\n== Database statistieken ==")
     stats = get_statistics()
     for key, value in stats.items():

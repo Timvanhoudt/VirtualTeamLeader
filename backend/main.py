@@ -21,7 +21,7 @@ import asyncio
 from typing import AsyncGenerator
 
 from utils.face_blur import FaceBlurrer
-from database import init_database, save_analysis
+from database import save_analysis, get_db_connection
 
 app = FastAPI(
     title="Werkplek Inspectie API",
@@ -29,11 +29,15 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Initialiseer database bij startup
+# Test database connection bij startup
 @app.on_event("startup")
 async def startup_event():
-    init_database()
-    print("✅ Database geïnitialiseerd bij startup")
+    try:
+        conn = get_db_connection()
+        conn.close()
+        print("✅ PostgreSQL database verbinding succesvol")
+    except Exception as e:
+        print(f"❌ Database verbinding mislukt: {e}")
 
 # CORS voor frontend
 app.add_middleware(
@@ -201,6 +205,142 @@ def generate_suggestions(class_id):
     return suggestions
 
 
+def analyze_image_detection(image, model_path=None, confidence_threshold=0.25):
+    """
+    Analyseer afbeelding met YOLO Object Detection model
+    Telt objecten (schaar, sleutel, whiteboard) en bepaalt status
+
+    Args:
+        image: Image te analyseren
+        model_path: Optioneel custom model path (default gebruikt globaal DETECTION_MODEL_PATH)
+        confidence_threshold: Minimale confidence voor detecties (default 0.25 = 25%)
+
+    Detection model classes:
+    0: hamer
+    1: schaar
+    2: sleutel
+
+    Returns:
+        dict met resultaten inclusief bounding boxes
+    """
+    if model_path is None:
+        model_path = DETECTION_MODEL_PATH
+
+    # Load model (cached als het hetzelfde pad is)
+    model = YOLO(str(model_path))
+
+    # Haal class names uit het model zelf (dynamisch!)
+    model_class_names = model.names  # Dict: {0: 'hamer', 1: 'schaar', 2: 'sleutel'}
+    print(f"📋 Model class names: {model_class_names}")
+
+    # Normaliseer class names naar lowercase voor consistentie
+    # En map 'whiteboard' → 'hamer' voor backwards compatibility
+    def normalize_class_name(name):
+        name_lower = name.lower()
+        if name_lower == 'whiteboard':
+            return 'hamer'
+        return name_lower
+
+    # YOLO object detection inference met dynamische confidence threshold
+    # confidence_threshold: alleen detecties boven deze drempel accepteren
+    # iou=0.7 means less aggressive NMS (allows more overlapping boxes)
+    print(f"🎯 Detection confidence threshold: {confidence_threshold*100:.0f}%")
+    results = model(image, conf=confidence_threshold, iou=0.7, max_det=100)
+
+    # Tel gedetecteerde objecten (dynamisch op basis van model.names)
+    object_counts = {"hamer": 0, "schaar": 0, "sleutel": 0}
+    max_confidence = 0.0
+    bounding_boxes = []
+
+    print(f"🔍 Detection: {len(results)} result(s)")
+    for result in results:
+        if result.boxes is not None:
+            print(f"  📦 Found {len(result.boxes)} boxes")
+            for box in result.boxes:
+                class_id = int(box.cls[0])
+                confidence = float(box.conf[0])
+
+                # Get bounding box coordinates (xyxy format)
+                x1, y1, x2, y2 = box.xyxy[0].tolist()
+
+                # Haal object naam uit MODEL (niet hardcoded!)
+                if class_id in model_class_names:
+                    raw_name = model_class_names[class_id]
+                    object_name = normalize_class_name(raw_name)
+
+                    # Tel alleen bekende objecten
+                    if object_name in object_counts:
+                        object_counts[object_name] += 1
+
+                        print(f"    ✓ Detected: {object_name} (model class: {raw_name}, confidence: {confidence:.2f})")
+                        bounding_boxes.append({
+                            "object": object_name,
+                            "confidence": confidence,
+                            "bbox": {
+                                "x1": int(x1),
+                                "y1": int(y1),
+                                "x2": int(x2),
+                                "y2": int(y2)
+                            }
+                        })
+                    else:
+                        print(f"    ⚠️ Onbekend object: {object_name} (class_id: {class_id})")
+                else:
+                    print(f"    ? Unknown class_id: {class_id}")
+
+                max_confidence = max(max_confidence, confidence)
+
+    # Bepaal status op basis van aanwezige objecten
+    hamer_present = object_counts["hamer"] > 0
+    schaar_present = object_counts["schaar"] > 0
+    sleutel_present = object_counts["sleutel"] > 0
+
+    # Map naar class_id
+    if hamer_present and schaar_present and sleutel_present:
+        class_id = 0  # OK - alles aanwezig
+    elif not hamer_present and not schaar_present and not sleutel_present:
+        class_id = 1  # NOK alles weg
+    elif not hamer_present and schaar_present and sleutel_present:
+        class_id = 2  # NOK hamer weg
+    elif hamer_present and not schaar_present and sleutel_present:
+        class_id = 3  # NOK schaar weg
+    elif hamer_present and not schaar_present and not sleutel_present:
+        class_id = 4  # NOK schaar en sleutel weg
+    elif hamer_present and schaar_present and not sleutel_present:
+        class_id = 5  # NOK sleutel weg
+    elif not hamer_present and not schaar_present and sleutel_present:
+        class_id = 6  # NOK alleen sleutel (hamer en schaar weg)
+    elif not hamer_present and schaar_present and not sleutel_present:
+        class_id = 7  # NOK hamer en sleutel weg (alleen schaar)
+    else:
+        # Fallback voor onverwachte combinaties
+        class_id = 1
+
+    # Detection models gebruiken altijd multiclass mapping (class 0-7)
+    class_info = CLASS_INFO_MULTICLASS.get(class_id, {})
+
+    print(f"📊 Final counts: hamer={object_counts['hamer']}, schaar={object_counts['schaar']}, sleutel={object_counts['sleutel']}")
+    print(f"📊 Total bounding boxes: {len(bounding_boxes)}")
+
+    # Debug info for frontend
+    debug_info = {
+        "total_boxes_detected": len(bounding_boxes),
+        "raw_counts": object_counts.copy(),
+        "detections": [f"{b['object']}({b['confidence']:.2f})" for b in bounding_boxes]
+    }
+
+    result = {
+        "class_id": int(class_id),
+        "confidence": float(max_confidence) if max_confidence > 0 else 0.5,
+        "status": class_info.get("status", "unknown"),
+        "detected_objects": object_counts,
+        "bounding_boxes": bounding_boxes,
+        "debug": debug_info  # Temporary debug info
+    }
+
+    return result
+
+
 @app.get("/")
 async def root():
     """Health check endpoint"""
@@ -353,6 +493,7 @@ async def inspect_workplace(
     workplace_id: int = Form(None),
     confidence_threshold: float = Form(0.25),  # Dynamische confidence threshold (0.0-1.0)
     session_id: str = Form(None),  # Voor progress tracking
+    camera_metadata: str = Form(None),  # Camera/foto eigenschappen als JSON
     request: Request = None
 ):
     """
@@ -571,6 +712,15 @@ async def inspect_workplace(
             # Detectie: volledige naam
             predicted_label = class_info.get("name", "Onbekend")
 
+        # Parse camera metadata if provided
+        camera_info = {}
+        if camera_metadata:
+            try:
+                camera_info = json.loads(camera_metadata)
+                print(f"[INSPECT] Camera metadata ontvangen: {camera_info}")
+            except json.JSONDecodeError:
+                print(f"[INSPECT] WARNING: Could not parse camera_metadata: {camera_metadata}")
+
         analysis_data = {
             'timestamp': timestamp,
             'image_path': image_path,
@@ -583,7 +733,8 @@ async def inspect_workplace(
             'device_id': device_id,
             'workplace_id': workplace_id,  # Voeg workplace ID toe voor filtering
             'model_type': model_type,  # Gebruik het daadwerkelijk gebruikte model type
-            'model_version': model_version  # Voeg model versie toe voor filtering
+            'model_version': model_version,  # Voeg model versie toe voor filtering
+            'camera_info': camera_info  # Voeg camera eigenschappen toe
         }
 
         # Voeg detection counts toe als detection mode actief is
@@ -727,13 +878,11 @@ async def get_history(limit: int = 100, offset: int = 0, status: str = None, wor
     Returns:
         List van analyses met metadata
     """
-    import sqlite3
     import json
 
     try:
-        # Als workplace_id is meegegeven, filter daarop
-        conn = sqlite3.connect('data/analyses.db')
-        conn.row_factory = sqlite3.Row
+        # Use PostgreSQL connection from database.py
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         query = "SELECT * FROM analyses"
@@ -744,21 +893,22 @@ async def get_history(limit: int = 100, offset: int = 0, status: str = None, wor
         conditions.append("image_path IS NOT NULL")
 
         if workplace_id is not None:
-            conditions.append("workplace_id = ?")
+            conditions.append("workplace_id = %s")
             params.append(workplace_id)
 
         if model_version is not None:
-            conditions.append("model_version = ?")
+            conditions.append("model_version = %s")
             params.append(model_version)
 
         if status:
-            conditions.append("status = ?")
+            # PostgreSQL uses 'result' field, not 'status'
+            conditions.append("result = %s")
             params.append(status)
 
         if conditions:
             query += " WHERE " + " AND ".join(conditions)
 
-        query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
+        query += " ORDER BY timestamp DESC LIMIT %s OFFSET %s"
         params.extend([limit, offset])
 
         cursor.execute(query, params)
@@ -767,7 +917,39 @@ async def get_history(limit: int = 100, offset: int = 0, status: str = None, wor
         analyses = []
         for row in rows:
             analysis = dict(row)
-            analysis['missing_items'] = json.loads(analysis['missing_items']) if analysis['missing_items'] else []
+            # Map PostgreSQL fields to frontend expected fields
+            analysis['status'] = analysis.get('result')
+            analysis['predicted_label'] = analysis.get('model_prediction')
+            analysis['predicted_class'] = analysis.get('model_prediction')
+            analysis['corrected_label'] = analysis.get('user_correction')
+            analysis['created_at'] = analysis.get('timestamp')  # timestamp -> created_at for frontend
+
+            # Extract metadata fields
+            metadata = analysis.get('metadata', {})
+            if isinstance(metadata, str):
+                try:
+                    metadata = json.loads(metadata)
+                except (json.JSONDecodeError, TypeError):
+                    metadata = {}
+            elif metadata is None:
+                metadata = {}
+
+            analysis['missing_items'] = metadata.get('missing_items', [])
+
+            # Add detection model specific fields if available
+            analysis['model_type'] = metadata.get('model_type', 'classification')
+            if metadata.get('model_type') == 'detection':
+                analysis['detected_hamer'] = metadata.get('detected_hamer', 0)
+                analysis['detected_schaar'] = metadata.get('detected_schaar', 0)
+                analysis['detected_sleutel'] = metadata.get('detected_sleutel', 0)
+                analysis['total_detections'] = metadata.get('total_detections', 0)
+
+            # Add device_id from metadata
+            analysis['device_id'] = metadata.get('device_id', 'onbekend')
+
+            # Add camera_info from metadata
+            analysis['camera_info'] = metadata.get('camera_info', None)
+
             analyses.append(analysis)
 
         conn.close()
@@ -980,25 +1162,23 @@ async def delete_analysis(analysis_id: int):
     Returns:
         Success bericht
     """
-    from database import DATABASE_PATH
-    import sqlite3
     import os
 
     try:
-        # Haal eerst de image_path op
-        conn = sqlite3.connect(DATABASE_PATH)
+        # Use PostgreSQL connection from database.py
+        conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT image_path FROM analyses WHERE id = ?", (analysis_id,))
+        cursor.execute("SELECT image_path FROM analyses WHERE id = %s", (analysis_id,))
         result = cursor.fetchone()
 
         if not result:
             conn.close()
             raise HTTPException(status_code=404, detail=f"Analyse {analysis_id} niet gevonden")
 
-        image_path = result[0]
+        image_path = result['image_path']
 
         # Verwijder de analyse uit database
-        cursor.execute("DELETE FROM analyses WHERE id = ?", (analysis_id,))
+        cursor.execute("DELETE FROM analyses WHERE id = %s", (analysis_id,))
         conn.commit()
         conn.close()
 
@@ -1547,8 +1727,7 @@ async def add_analysis_to_training(workplace_id: int, analysis_id: int = Form(..
     Returns:
         Success bericht
     """
-    from database import get_workplace, DATABASE_PATH
-    import sqlite3
+    from database import get_workplace
     import shutil
 
     try:
@@ -1557,11 +1736,10 @@ async def add_analysis_to_training(workplace_id: int, analysis_id: int = Form(..
         if not workplace:
             raise HTTPException(status_code=404, detail="Werkplek niet gevonden")
 
-        # Haal analyse op
-        conn = sqlite3.connect(DATABASE_PATH)
-        conn.row_factory = sqlite3.Row
+        # Haal analyse op using PostgreSQL
+        conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM analyses WHERE id = ?", (analysis_id,))
+        cursor.execute("SELECT * FROM analyses WHERE id = %s", (analysis_id,))
         analysis = cursor.fetchone()
         conn.close()
 
@@ -1590,20 +1768,26 @@ async def add_analysis_to_training(workplace_id: int, analysis_id: int = Form(..
         # Verplaats bestand naar training folder
         shutil.move(image_path, new_path)
 
-        # Update analyse record:
+        # Update analyse record using PostgreSQL
         # - Update image_path naar nieuwe locatie
-        # - Set corrected_label naar het label (zodat het een training candidate wordt)
-        # - Mark as training_candidate
-        conn = sqlite3.connect(DATABASE_PATH)
+        # - Set user_correction to label (PostgreSQL field)
+        # - is_correct will be determined by comparing model_prediction with user_correction
+        conn = get_db_connection()
         cursor = conn.cursor()
+
+        # Get current model_prediction to determine is_correct
+        cursor.execute("SELECT model_prediction FROM analyses WHERE id = %s", (analysis_id,))
+        result = cursor.fetchone()
+        model_prediction = result['model_prediction'] if result else None
+        is_correct = (model_prediction == label) if model_prediction else None
+
         cursor.execute("""
             UPDATE analyses
-            SET image_path = ?,
-                corrected_label = ?,
-                corrected_class = predicted_class,
-                training_candidate = 1
-            WHERE id = ?
-        """, (str(new_path), label, analysis_id))
+            SET image_path = %s,
+                user_correction = %s,
+                is_correct = %s
+            WHERE id = %s
+        """, (str(new_path), label, is_correct, analysis_id))
         conn.commit()
         conn.close()
 
@@ -1740,25 +1924,25 @@ async def get_model_versions_endpoint(workplace_id: int):
 
     Returns lijst van unieke model versies die data hebben gegenereerd
     """
-    import sqlite3
-    from database import DATABASE_PATH, get_workplace
+    from database import get_workplace
 
     try:
         if not get_workplace(workplace_id):
             raise HTTPException(status_code=404, detail="Werkplek niet gevonden")
 
-        conn = sqlite3.connect(DATABASE_PATH)
+        # Use PostgreSQL connection
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         cursor.execute("""
             SELECT DISTINCT model_version
             FROM analyses
-            WHERE workplace_id = ?
+            WHERE workplace_id = %s
             AND model_version IS NOT NULL
             ORDER BY model_version DESC
         """, (workplace_id,))
 
-        versions = [row[0] for row in cursor.fetchall()]
+        versions = [row['model_version'] for row in cursor.fetchall()]
         conn.close()
 
         return {
@@ -1960,25 +2144,24 @@ async def delete_model_endpoint(model_id: int):
     Returns:
         Success bericht
     """
-    import sqlite3
     import os
     from pathlib import Path
 
     try:
-        conn = sqlite3.connect('data/analyses.db')
-        conn.row_factory = sqlite3.Row
+        # Use PostgreSQL connection
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         # Haal model info op
-        cursor.execute("SELECT * FROM models WHERE id = ?", (model_id,))
+        cursor.execute("SELECT * FROM models WHERE id = %s", (model_id,))
         model = cursor.fetchone()
 
         if not model:
             conn.close()
             raise HTTPException(status_code=404, detail="Model niet gevonden")
 
-        # Check of model actief is
-        if model['status'] == 'active':
+        # Check of model actief is (PostgreSQL uses is_active boolean, not status)
+        if model['is_active']:
             conn.close()
             raise HTTPException(status_code=400, detail="Kan actief model niet verwijderen. Deactiveer het model eerst.")
 
@@ -1988,7 +2171,7 @@ async def delete_model_endpoint(model_id: int):
             os.remove(model_path)
 
         # Verwijder uit database
-        cursor.execute("DELETE FROM models WHERE id = ?", (model_id,))
+        cursor.execute("DELETE FROM models WHERE id = %s", (model_id,))
         conn.commit()
         conn.close()
 
@@ -2261,144 +2444,16 @@ if __name__ == "__main__":
     print(f"Model bestaat: {MODEL_PATH.exists()}")
     print("="*60)
 
-    # Initialiseer database
-    init_database()
+    # PostgreSQL database - geen init nodig, schema bestaat al
+    print("✅ Using existing PostgreSQL database")
 
-    # Start backend met HTTP
-    print(f"Starting backend with HTTP on http://0.0.0.0:8000")
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
-def analyze_image_detection(image, model_path=None, confidence_threshold=0.25):
-    """
-    Analyseer afbeelding met YOLO Object Detection model
-    Telt objecten (schaar, sleutel, whiteboard) en bepaalt status
-
-    Args:
-        image: Image te analyseren
-        model_path: Optioneel custom model path (default gebruikt globaal DETECTION_MODEL_PATH)
-        confidence_threshold: Minimale confidence voor detecties (default 0.25 = 25%)
-
-    Detection model classes:
-    0: hamer
-    1: schaar
-    2: sleutel
-
-    Returns:
-        dict met resultaten inclusief bounding boxes
-    """
-    if model_path is None:
-        model_path = DETECTION_MODEL_PATH
-
-    # Load model (cached als het hetzelfde pad is)
-    model = YOLO(str(model_path))
-
-    # Haal class names uit het model zelf (dynamisch!)
-    model_class_names = model.names  # Dict: {0: 'hamer', 1: 'schaar', 2: 'sleutel'}
-    print(f"📋 Model class names: {model_class_names}")
-
-    # Normaliseer class names naar lowercase voor consistentie
-    # En map 'whiteboard' → 'hamer' voor backwards compatibility
-    def normalize_class_name(name):
-        name_lower = name.lower()
-        if name_lower == 'whiteboard':
-            return 'hamer'
-        return name_lower
-
-    # YOLO object detection inference met dynamische confidence threshold
-    # confidence_threshold: alleen detecties boven deze drempel accepteren
-    # iou=0.7 means less aggressive NMS (allows more overlapping boxes)
-    print(f"🎯 Detection confidence threshold: {confidence_threshold*100:.0f}%")
-    results = model(image, conf=confidence_threshold, iou=0.7, max_det=100)
-
-    # Tel gedetecteerde objecten (dynamisch op basis van model.names)
-    object_counts = {"hamer": 0, "schaar": 0, "sleutel": 0}
-    max_confidence = 0.0
-    bounding_boxes = []
-
-    print(f"🔍 Detection: {len(results)} result(s)")
-    for result in results:
-        if result.boxes is not None:
-            print(f"  📦 Found {len(result.boxes)} boxes")
-            for box in result.boxes:
-                class_id = int(box.cls[0])
-                confidence = float(box.conf[0])
-
-                # Get bounding box coordinates (xyxy format)
-                x1, y1, x2, y2 = box.xyxy[0].tolist()
-
-                # Haal object naam uit MODEL (niet hardcoded!)
-                if class_id in model_class_names:
-                    raw_name = model_class_names[class_id]
-                    object_name = normalize_class_name(raw_name)
-
-                    # Tel alleen bekende objecten
-                    if object_name in object_counts:
-                        object_counts[object_name] += 1
-
-                        print(f"    ✓ Detected: {object_name} (model class: {raw_name}, confidence: {confidence:.2f})")
-                        bounding_boxes.append({
-                            "object": object_name,
-                            "confidence": confidence,
-                            "bbox": {
-                                "x1": int(x1),
-                                "y1": int(y1),
-                                "x2": int(x2),
-                                "y2": int(y2)
-                            }
-                        })
-                    else:
-                        print(f"    ⚠️ Onbekend object: {object_name} (class_id: {class_id})")
-                else:
-                    print(f"    ? Unknown class_id: {class_id}")
-
-                max_confidence = max(max_confidence, confidence)
-
-    # Bepaal status op basis van aanwezige objecten
-    hamer_present = object_counts["hamer"] > 0
-    schaar_present = object_counts["schaar"] > 0
-    sleutel_present = object_counts["sleutel"] > 0
-
-    # Map naar class_id
-    if hamer_present and schaar_present and sleutel_present:
-        class_id = 0  # OK - alles aanwezig
-    elif not hamer_present and not schaar_present and not sleutel_present:
-        class_id = 1  # NOK alles weg
-    elif not hamer_present and schaar_present and sleutel_present:
-        class_id = 2  # NOK hamer weg
-    elif hamer_present and not schaar_present and sleutel_present:
-        class_id = 3  # NOK schaar weg
-    elif hamer_present and not schaar_present and not sleutel_present:
-        class_id = 4  # NOK schaar en sleutel weg
-    elif hamer_present and schaar_present and not sleutel_present:
-        class_id = 5  # NOK sleutel weg
-    elif not hamer_present and not schaar_present and sleutel_present:
-        class_id = 6  # NOK alleen sleutel (hamer en schaar weg)
-    elif not hamer_present and schaar_present and not sleutel_present:
-        class_id = 7  # NOK hamer en sleutel weg (alleen schaar)
-    else:
-        # Fallback voor onverwachte combinaties
-        class_id = 1
-
-    # Detection models gebruiken altijd multiclass mapping (class 0-7)
-    class_info = CLASS_INFO_MULTICLASS.get(class_id, {})
-
-    print(f"📊 Final counts: hamer={object_counts['hamer']}, schaar={object_counts['schaar']}, sleutel={object_counts['sleutel']}")
-    print(f"📊 Total bounding boxes: {len(bounding_boxes)}")
-
-    # Debug info for frontend
-    debug_info = {
-        "total_boxes_detected": len(bounding_boxes),
-        "raw_counts": object_counts.copy(),
-        "detections": [f"{b['object']}({b['confidence']:.2f})" for b in bounding_boxes]
-    }
-
-    result = {
-        "class_id": int(class_id),
-        "confidence": float(max_confidence) if max_confidence > 0 else 0.5,
-        "status": class_info.get("status", "unknown"),
-        "detected_objects": object_counts,
-        "bounding_boxes": bounding_boxes,
-        "debug": debug_info  # Temporary debug info
-    }
-
-    return result
-
+    # Start backend met HTTPS
+    print(f"Starting backend with HTTPS on https://0.0.0.0:8000")
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=8000,
+        reload=False,  # Reload mode heeft problemen met SSL
+        ssl_keyfile="ssl_key.pem",
+        ssl_certfile="ssl_cert.pem"
+    )

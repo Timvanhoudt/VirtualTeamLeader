@@ -7,10 +7,10 @@ import { Bar, Pie, Line } from 'react-chartjs-2';
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, LineElement, PointElement, Title, Tooltip, Legend);
 
-// API URL
+// API URL - Backend draait op HTTPS
 const API_URL = window.location.hostname === 'localhost'
-  ? 'http://localhost:8000'
-  : `http://${window.location.hostname}:8000`;
+  ? 'https://localhost:8000'
+  : `https://${window.location.hostname}:8000`;
 
 function History({ onBack }) {
   const [analyses, setAnalyses] = useState([]);
@@ -551,6 +551,33 @@ function History({ onBack }) {
                         <span className="meta-label">📱 Device:</span>
                         <span className="meta-value">{analysis.device_id || 'onbekend'}</span>
                       </div>
+
+                      {analysis.camera_info && (
+                        <>
+                          {analysis.camera_info.resolution_width && analysis.camera_info.resolution_height && (
+                            <div className="meta-item">
+                              <span className="meta-label">📷 Resolutie:</span>
+                              <span className="meta-value">
+                                {analysis.camera_info.resolution_width}x{analysis.camera_info.resolution_height}
+                              </span>
+                            </div>
+                          )}
+                          {analysis.camera_info.file_size_kb && (
+                            <div className="meta-item">
+                              <span className="meta-label">💾 Grootte:</span>
+                              <span className="meta-value">{analysis.camera_info.file_size_kb} KB</span>
+                            </div>
+                          )}
+                          {analysis.camera_info.camera_facing && (
+                            <div className="meta-item">
+                              <span className="meta-label">🎥 Camera:</span>
+                              <span className="meta-value">
+                                {analysis.camera_info.camera_facing === 'environment' ? 'Achterkant' : 'Webcam'}
+                              </span>
+                            </div>
+                          )}
+                        </>
+                      )}
 
                       {analysis.missing_items && analysis.missing_items.length > 0 && (
                         <div className="meta-item">

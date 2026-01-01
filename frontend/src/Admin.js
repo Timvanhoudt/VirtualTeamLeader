@@ -3,10 +3,10 @@ import './Admin.css';
 import './History.css'; // Import History styling voor Production Review
 import axios from 'axios';
 
-// API URL
+// API URL - Backend draait op HTTPS
 const API_URL = window.location.hostname === 'localhost'
-  ? 'http://localhost:8000'
-  : `http://${window.location.hostname}:8000`;
+  ? 'https://localhost:8000'
+  : `https://${window.location.hostname}:8000`;
 
 function Admin({ onBack }) {
   const [activeTab, setActiveTab] = useState('workplaces');
@@ -165,7 +165,7 @@ function ModelManagementSection({ workplace, models, onModelsUpdate, showToast }
   });
   const [uploading, setUploading] = useState(false);
 
-  const activeModel = models.find(m => m.status === 'active');
+  const activeModel = models.find(m => m.is_active === true);
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
@@ -433,6 +433,78 @@ function ModelManagementSection({ workplace, models, onModelsUpdate, showToast }
 }
 
 // ==========================================
+// CONFIDENCE THRESHOLD SLIDER COMPONENT
+// ==========================================
+function ConfidenceThresholdSlider({ workplace, onUpdate }) {
+  const [localThreshold, setLocalThreshold] = useState(
+    Math.round((workplace.confidence_threshold || 0.25) * 100)
+  );
+  const [isSaving, setIsSaving] = useState(false);
+  const timeoutRef = React.useRef(null);
+
+  // Update local state when workplace prop changes
+  React.useEffect(() => {
+    setLocalThreshold(Math.round((workplace.confidence_threshold || 0.25) * 100));
+  }, [workplace.confidence_threshold]);
+
+  const handleChange = (e) => {
+    const newValue = parseInt(e.target.value);
+    setLocalThreshold(newValue);
+
+    // Clear existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    // Set new timeout to save after 500ms of no changes
+    timeoutRef.current = setTimeout(async () => {
+      setIsSaving(true);
+      try {
+        await axios.put(`${API_URL}/api/workplaces/${workplace.id}`, {
+          confidence_threshold: newValue / 100
+        });
+        // Only reload after successful save
+        if (onUpdate) {
+          onUpdate();
+        }
+      } catch (error) {
+        console.error('Error updating threshold:', error);
+        // Reset to original value on error
+        setLocalThreshold(Math.round((workplace.confidence_threshold || 0.25) * 100));
+      } finally {
+        setIsSaving(false);
+      }
+    }, 500);
+  };
+
+  return (
+    <div className="detail-section">
+      <h4>⚙️ Detection Instellingen</h4>
+      <div className="form-group">
+        <label style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
+          <span>Confidence Threshold:</span>
+          <strong>
+            {localThreshold}%
+            {isSaving && <span style={{marginLeft: '8px', fontSize: '12px', color: '#999'}}>💾</span>}
+          </strong>
+        </label>
+        <input
+          type="range"
+          min="10"
+          max="90"
+          value={localThreshold}
+          onChange={handleChange}
+          style={{width: '100%', cursor: 'pointer'}}
+        />
+        <small style={{color: '#666', fontSize: '12px'}}>
+          Minimale confidence voor object detectie. Hogere waarde = meer selectief, minder false positives.
+        </small>
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
 // TAB 1: WERKPLEKKEN BEHEER
 // ==========================================
 function WorkplacesManagementTab({ workplaces, loading, onRefresh, showToast }) {
@@ -640,38 +712,10 @@ function WorkplacesManagementTab({ workplaces, loading, onRefresh, showToast }) 
                 <p><strong>Aangemaakt:</strong> {new Date(selectedWorkplace.workplace.created_at).toLocaleString('nl-NL')}</p>
               </div>
 
-              <div className="detail-section">
-                <h4>⚙️ Detection Instellingen</h4>
-                <div className="form-group">
-                  <label style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
-                    <span>Confidence Threshold:</span>
-                    <strong>{Math.round((selectedWorkplace.workplace.confidence_threshold || 0.25) * 100)}%</strong>
-                  </label>
-                  <input
-                    type="range"
-                    min="10"
-                    max="90"
-                    value={Math.round((selectedWorkplace.workplace.confidence_threshold || 0.25) * 100)}
-                    onChange={async (e) => {
-                      const newThreshold = parseInt(e.target.value) / 100;
-                      try {
-                        await axios.put(`${API_URL}/api/workplaces/${selectedWorkplace.workplace.id}`, {
-                          confidence_threshold: newThreshold
-                        });
-                        // Reload workplace details to update UI
-                        loadWorkplaceDetails(selectedWorkplace.workplace.id);
-                      } catch (error) {
-                        console.error('Error updating threshold:', error);
-                        alert('Fout bij bijwerken threshold');
-                      }
-                    }}
-                    style={{width: '100%', cursor: 'pointer'}}
-                  />
-                  <small style={{color: '#666', fontSize: '12px'}}>
-                    Minimale confidence voor object detectie. Hogere waarde = meer selectief, minder false positives.
-                  </small>
-                </div>
-              </div>
+              <ConfidenceThresholdSlider
+                workplace={selectedWorkplace.workplace}
+                onUpdate={() => loadWorkplaceDetails(selectedWorkplace.workplace.id)}
+              />
 
               <div className="detail-section">
                 <h4>Referentie Foto</h4>
@@ -897,11 +941,11 @@ function TrainingDataTab({ workplaces, loading, refreshTrigger, selectedWorkplac
     try {
       const response = await axios.get(`${API_URL}/api/workplaces/${workplaceId}/models`);
       if (response.data.success) {
-        const hasActive = response.data.models.some(m => m.status === 'active');
+        const hasActive = response.data.models.some(m => m.is_active === true);
         setHasActiveModel(hasActive);
 
         // Vind het actieve model en laad alleen zijn data
-        const activeModel = response.data.models.find(m => m.status === 'active');
+        const activeModel = response.data.models.find(m => m.is_active === true);
         if (activeModel && activeModel.version) {
           setActiveModelVersion(activeModel.version);
           setActiveModelType(activeModel.model_type); // 'detection' of 'classification'
@@ -1677,7 +1721,7 @@ function ReviewAnalysisTab({ workplaces, loading: workplacesLoading, onDataUpdat
     try {
       const response = await axios.get(`${API_URL}/api/workplaces/${workplaceId}/models`);
       if (response.data.success) {
-        const activeModel = response.data.models.find(m => m.status === 'active');
+        const activeModel = response.data.models.find(m => m.is_active === true);
         if (activeModel && activeModel.version) {
           setActiveModelVersion(activeModel.version);
         } else {
@@ -1932,6 +1976,33 @@ function ReviewAnalysisTab({ workplaces, loading: workplacesLoading, onDataUpdat
                     <span className="meta-label">📱 Device:</span>
                     <span className="meta-value">{analysis.device_id || 'onbekend'}</span>
                   </div>
+
+                  {analysis.camera_info && (
+                    <>
+                      {analysis.camera_info.resolution_width && analysis.camera_info.resolution_height && (
+                        <div className="meta-item">
+                          <span className="meta-label">📷 Resolutie:</span>
+                          <span className="meta-value">
+                            {analysis.camera_info.resolution_width}x{analysis.camera_info.resolution_height}
+                          </span>
+                        </div>
+                      )}
+                      {analysis.camera_info.file_size_kb && (
+                        <div className="meta-item">
+                          <span className="meta-label">💾 Grootte:</span>
+                          <span className="meta-value">{analysis.camera_info.file_size_kb} KB</span>
+                        </div>
+                      )}
+                      {analysis.camera_info.camera_facing && (
+                        <div className="meta-item">
+                          <span className="meta-label">🎥 Camera:</span>
+                          <span className="meta-value">
+                            {analysis.camera_info.camera_facing === 'environment' ? 'Achterkant' : 'Webcam'}
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  )}
 
                   {analysis.missing_items && analysis.missing_items.length > 0 && (
                     <div className="meta-item">
